@@ -1,4 +1,8 @@
 #!/bin/python
+
+import sys
+import os.path
+import ConfigParser
 import Image, time
 import numpy 
 
@@ -22,8 +26,40 @@ def img_compare(img1, img2, p1, p2):
     return same
 
 
-im1 = Image.open('tests/screen1.png')
-im2 = Image.open('tests/screen2.png')
+
+if (len(sys.argv) < 2):
+    print "Please specify INI file"
+    sys.exit(1) 
+
+ini_file = sys.argv[1]
+if(not os.path.exists(ini_file)):
+    cur_path = os.path.dirname(os.path.realpath(__file__))
+    ini_file = cur_path + '/' + sys.argv[1]
+    
+    if(not os.path.exists(ini_file)):
+    
+        print "INI file does not exist"
+        sys.exit(1)
+
+config = ConfigParser.ConfigParser()
+config.read(ini_file)
+
+isOK = True
+
+section = "main"
+isOK = isOK and config.has_option(section, "path")
+isOK = isOK and config.has_option(section, "menu")
+isOK = isOK and config.has_option(section, "main-map")
+isOK = isOK and config.has_option(section, "stop_inside")
+isOK = isOK and config.has_option(section, "capture-screen")
+
+if (not isOK):
+    print "Some parameters are missing in section: %s" % section
+    sys.exit(1)
+
+path = config.get(section, "path")
+im_menu = Image.open(path + config.get(section, "menu"))
+
 # w,h = im.size
 
 x1 = [90, 1280]
