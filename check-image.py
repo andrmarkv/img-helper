@@ -33,13 +33,8 @@ if (len(sys.argv) < 2):
 
 ini_file = sys.argv[1]
 if(not os.path.exists(ini_file)):
-    cur_path = os.path.dirname(os.path.realpath(__file__))
-    ini_file = cur_path + '/' + sys.argv[1]
-    
-    if(not os.path.exists(ini_file)):
-    
-        print "INI file does not exist"
-        sys.exit(1)
+    print "INI file does not exist"
+    sys.exit(1)
 
 config = ConfigParser.ConfigParser()
 config.read(ini_file)
@@ -50,7 +45,7 @@ section = "main"
 isOK = isOK and config.has_option(section, "path")
 isOK = isOK and config.has_option(section, "menu")
 isOK = isOK and config.has_option(section, "main-map")
-isOK = isOK and config.has_option(section, "stop_inside")
+isOK = isOK and config.has_option(section, "stop-inside")
 isOK = isOK and config.has_option(section, "capture-screen")
 
 if (not isOK):
@@ -58,7 +53,10 @@ if (not isOK):
     sys.exit(1)
 
 path = config.get(section, "path")
-im_menu = Image.open(path + config.get(section, "menu"))
+im_menu = Image.open(os.path.join(path, config.get(section, "menu")))
+im_main_map = Image.open(os.path.join(path, config.get(section, "main-map")))
+im_stop_inside = Image.open(os.path.join(path, config.get(section, "stop-inside")))
+im_capture_screen = Image.open(os.path.join(path, config.get(section, "capture-screen")))
 
 # w,h = im.size
 
