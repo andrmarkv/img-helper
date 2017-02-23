@@ -26,12 +26,27 @@ from skimage import data
 from skimage.feature import match_template
 
 
+def dump_array(file, arr):
+    f = open(file,'w')
+    K,N = arr.shape
+    for i in range(0,K):
+        s = ''  
+        for j in range(0,N):
+            if(arr[i, j] > 0.5):
+                s = s + ("% 3.2f " % (arr[i, j]))
+            else:
+                s = s + ("% 3.2f " % (0))
+        f.write(s + '\n')
+    f.close()
+
 image = data.coins()
 coin = image[170:220, 75:130]
 
 result = match_template(image, coin)
 ij = np.unravel_index(np.argmax(result), result.shape)
 x, y = ij[::-1]
+
+dump_array("/tmp/test.txt", result)
 
 fig = plt.figure(figsize=(8, 3))
 ax1 = plt.subplot(1, 3, 1)

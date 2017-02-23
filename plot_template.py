@@ -25,6 +25,8 @@ import matplotlib.pyplot as plt
 from skimage import data
 from skimage.feature import match_template
 
+import os 
+
 def img_cut(img, p1, p2):
     #crop images
     imc = img.crop((p1[0], p1[1], p2[0], p2[1]))
@@ -35,8 +37,10 @@ def img_cut(img, p1, p2):
     
     return a
 
-coin = data.load("tests/img1.png")
-image = data.load("tests/31d53011/inside-pokestop.png")
+cur_dir = os.path.dirname(os.path.realpath(__file__)) + "/"
+
+coin = data.load(cur_dir + "tests/img1.png")
+image = data.load(cur_dir + "tests/31d53011/inside-pokestop.png")
 
 result = match_template(image, coin)
 ij = np.unravel_index(np.argmax(result), result.shape)
