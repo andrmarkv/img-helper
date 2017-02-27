@@ -24,8 +24,13 @@ import matplotlib.pyplot as plt
 
 from skimage import data
 from skimage.feature import match_template
+from skimage.color import rgb2gray
 
-import os 
+import os
+from skimage.color.colorconv import rgb2grey
+
+cur_dir = os.path.dirname(os.path.realpath(__file__)) + "/"
+
 
 def img_cut(img, p1, p2):
     #crop images
@@ -37,14 +42,20 @@ def img_cut(img, p1, p2):
     
     return a
 
-cur_dir = os.path.dirname(os.path.realpath(__file__)) + "/"
-
 coin = data.load(cur_dir + "tests/img1.png")
-image = data.load(cur_dir + "tests/31d53011/inside-pokestop.png")
+coin = rgb2gray(coin)
+#image = data.load(cur_dir + "tests/31d53011/screen_1487610589.png")
+#image = data.load(cur_dir + "tests/d0b760087cf3/screen2.png")
+#image = data.load(cur_dir + "tests/31d53011/captured-pokemon.png")
+image = data.load(cur_dir + "tests/31d53011/capture-screen.png")
+
+
+image = rgb2grey(image)
 
 result = match_template(image, coin)
 ij = np.unravel_index(np.argmax(result), result.shape)
 x, y = ij[::-1]
+
 
 fig = plt.figure(figsize=(8, 3))
 ax1 = plt.subplot(1, 3, 1)
