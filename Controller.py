@@ -51,7 +51,10 @@ if (not isOK):
 #Read all template descriptions and populate dictionary
 templates = read_templates(config)
 
+#Create handler class that has to handle CONTROL messages
+handler = msgHandler.MsgHandler(templates)
 
-server = server.ControlServer('localhost', 8002)
+#Create instance of the server and pass handler to it
+server = server.ControlServer('localhost', 8002, handler)
 server.test();
 server.run()

@@ -18,7 +18,7 @@ def check_image(image, template):
     
     img = np.array(Image.open(image).convert('L'))
     
-    r = pgutil.check_image(img, template, MIN_RECOGNITION_VAL)
+    r = pgutil.match_template(img, template, MIN_RECOGNITION_VAL)
     
     t1 = datetime.datetime.now()
     i = image.find("inside-pokestop")

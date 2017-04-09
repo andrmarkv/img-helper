@@ -7,6 +7,8 @@ import StringIO
 from PIL import Image
 import numpy as np
 
+from pg import pgconst
+
 """
 execute adb screen capture and return it
 as numpy array of bytes (grey two dimentional, suitable for cv2 operations)
@@ -35,7 +37,7 @@ retuns tuple of (True/False, min_val, center, min_loc), where
     center - is center of the location where that minimum was found
     min_loc - is top left corner of the location where that minimum was found
 """
-def check_image(image, template, min_reconition_val):
+def match_template(image, template, min_reconition_val):
     w, h = template.shape[::-1]
     
     method = cv2.TM_SQDIFF_NORMED
@@ -65,7 +67,60 @@ def read_template_description(config, section, path):
     
     tmp = config.get(section, "region")
     region = ast.literal_eval(tmp)
+
+    script = config.get(section, "script")    
+    script_close = config.get(section, "script_close")
     
-    template = (section, im, region)
+    template = (section, im, region, script, script_close)
     
     return template
+
+
+"""
+Convenience function, it has to verify if current image is a main map of the game
+Parameters:
+    img - current screenshot
+    templates - dictionary of populated templates
+Returns:
+    True - if match was found
+    False - all other cases
+"""
+def is_main_map(img, templates):
+    r = match_template(img, templates[pgconst.TEMPLATE_MAIN_MAP], pgconst.MIN_RECOGNITION_VAL)
+    if r[0]:
+        return True
+    
+    return False
+
+"""
+Convenience function, it has to verify if current image is a main menu of the game
+Parameters:
+    img - current screenshot
+    templates - dictionary of populated templates
+Returns:
+    True - if match was found
+    False - all other cases
+"""
+def is_menu(img, templates):
+    r = match_template(img, templates[pgconst.TEMPLATE_MENU], pgconst.MIN_RECOGNITION_VAL)
+    if r[0]:
+        return True
+    
+    return False
+
+
+"""
+Convenience function, it has to verify if current image is inside pokestop screen
+Parameters:
+    img - current screenshot
+    templates - dictionary of populated templates
+Returns:
+    True - if match was found
+    False - all other cases
+"""
+def is_inside_pokestop(img, templates):
+    r = match_template(img, templates[pgconst.TEMPLATE_INSIDE_POKESTOP], pgconst.MIN_RECOGNITION_VAL)
+    if r[0]:
+        return True
+    
+    return False

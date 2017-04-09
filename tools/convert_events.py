@@ -45,7 +45,7 @@ def convert_file_adb(file_name):
     fw.close() 
 
 
-path = "events/"
+path = "../events/"
 
 results = list();
 
