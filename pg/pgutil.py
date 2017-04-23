@@ -129,15 +129,15 @@ Parameters:
     img - current screenshot
     templates - dictionary of populated templates
 Returns:
-    True - if match was found
-    False - all other cases
+    tuple (True/False, min_val, center, min_loc)
+    where - True - if match was found/False - all other cases
+    min_val - minimum value
+    center - center of the identified minimum
+    min_loc - top left corner of the identified minimum 
 """
 def is_main_map(img, templates):
     r = match_template(img, templates[pgconst.TEMPLATE_MAIN_MAP][1], pgconst.MIN_RECOGNITION_VAL)
-    if r[0]:
-        return True
-    
-    return False
+    return r
 
 """
 Convenience function, it has to verify if current image is a main menu of the game
@@ -145,16 +145,15 @@ Parameters:
     img - current screenshot
     templates - dictionary of populated templates
 Returns:
-    True - if match was found
-    False - all other cases
+    tuple (True/False, min_val, center, min_loc)
+    where - True - if match was found/False - all other cases
+    min_val - minimum value
+    center - center of the identified minimum
+    min_loc - top left corner of the identified minimum
 """
 def is_menu(img, templates):
     r = match_template(img, templates[pgconst.TEMPLATE_MENU][1], pgconst.MIN_RECOGNITION_VAL)
-    if r[0]:
-        return True
-    
-    return False
-
+    return r
 
 """
 Convenience function, it has to verify if current image is inside pokestop screen
@@ -162,15 +161,27 @@ Parameters:
     img - current screenshot
     templates - dictionary of populated templates
 Returns:
-    True - if match was found
-    False - all other cases
+    tuple (True/False, min_val, center, min_loc)
+    where - True - if match was found/False - all other cases
+    min_val - minimum value
+    center - center of the identified minimum
+    min_loc - top left corner of the identified minimum
 """
 def is_inside_pokestop(img, templates):
     r = match_template(img, templates[pgconst.TEMPLATE_INSIDE_POKESTOP][1], pgconst.MIN_RECOGNITION_VAL)
-    if r[0]:
-        return True
+    return r
     
-    return False
+
+def identify_screen(img, templates):
+    r = is_main_map(img, templates)
+    if r[0]:
+        r[0]=pgconst.SCREEN_MAIN_MAP
+        return r
+    
+    r = is_inside_pokestop(img, templates)
+    if r[0]:
+        r[0]=pgconst.SCREEN_MAIN_MAP
+        return r
 
 
 """
@@ -187,7 +198,7 @@ def clear_bag(items, templates):
         print "clear_bag Error! Can't capture the screen."
         return
     
-    if not is_main_map(img, templates):
+    if is_main_map(img, templates) is None:
         print "clear_bag Error! wrong start screen."
         return
     
