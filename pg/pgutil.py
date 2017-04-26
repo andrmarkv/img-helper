@@ -182,6 +182,13 @@ def identify_screen(img, templates):
     if r[0]:
         r[0]=pgconst.SCREEN_MAIN_MAP
         return r
+    
+    r = is_menu(img, templates)
+    if r[0]:
+        r[0]=pgconst.SCREEN_MAIN_MENU
+        return r
+    
+    return None
 
 
 """
@@ -198,7 +205,7 @@ def clear_bag(items, templates):
         print "clear_bag Error! Can't capture the screen."
         return
     
-    if is_main_map(img, templates) is None:
+    if is_main_map(img, templates)[0]:
         print "clear_bag Error! wrong start screen."
         return
     

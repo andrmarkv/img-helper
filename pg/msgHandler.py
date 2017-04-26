@@ -22,9 +22,9 @@ class MsgHandler:
         
         print "MsgHandler.processMsg: Started pokestop handling"
         
-        if pgutil.is_main_map(img, self.templates) is not None:
+        if pgutil.is_main_map(img, self.templates)[0]:
             self.send_pokestop_touch_events()
-        elif pgutil.is_menu(img, self.templates) is not None:
+        elif pgutil.is_menu(img, self.templates)[0]:
             self.send_close_menu_touch_events()
             time.sleep(1)
             self.send_pokestop_touch_events()
