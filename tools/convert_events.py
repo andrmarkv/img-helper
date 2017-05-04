@@ -2,7 +2,7 @@
 
 import os
 
-DEVICE = '/dev/input/event4'
+DEVICE = '/dev/input/event1'
 
 def convert_file(file_name):
     f = open(file_name, 'r')

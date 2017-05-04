@@ -56,8 +56,14 @@ templates = read_templates(config)
 
 
 #TESTING
-pgutil.clear_bag(pgconst.DEL_ITEMS_POKEYBALL|pgconst.DEL_ITEMS_NANAB_BERRY, templates)
+#items_to_delete = pgconst.DEL_ITEMS_POKEYBALL | pgconst.DEL_ITEMS_NANAB_BERRY | pgconst.DEL_ITEMS_POTION | pgconst.DEL_ITEMS_RAZZ_BERRY | pgconst.DEL_ITEMS_REVIVE 
+#items_to_delete = pgconst.DEL_ITEMS_POKEYBALL
+#pgutil.clear_bag(items_to_delete, templates)
 
+#pgutil.click_sector(templates, (540, 960), 50, 500, 30, 60)
+pgutil.click_donut(templates, (540, 960), 50, 500, 6)
+
+sys.exit(1)
 
 #Create handler class that has to handle CONTROL messages
 handler = msgHandler.MsgHandler(templates)
