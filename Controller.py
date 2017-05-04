@@ -61,7 +61,8 @@ templates = read_templates(config)
 #pgutil.clear_bag(items_to_delete, templates)
 
 #pgutil.click_sector(templates, (540, 960), 50, 500, 30, 60)
-pgutil.click_donut(templates, (540, 960), 50, 500, 6)
+#pgutil.click_donut(templates, (540, 960), 50, 500, 6)
+pgutil.look_around(templates)
 
 sys.exit(1)
 

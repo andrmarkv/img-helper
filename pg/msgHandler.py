@@ -34,12 +34,6 @@ class MsgHandler:
         print "MsgHandler.processMsg: Finished pokestop handling"
         
         
-    def send_pokestop_touch_events(self):
-        script = self.templates[pgconst.TEMPLATE_INSIDE_POKESTOP][3]
-        subprocess.call(['/usr/bin/adb', 'shell', 'sh', script])
-        
-    def send_close_menu_touch_events(self):
-        script = self.templates[pgconst.TEMPLATE_MENU][4]
-        subprocess.call(['/usr/bin/adb', 'shell', 'sh', script])
+
         
         

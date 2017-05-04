@@ -178,18 +178,15 @@ def is_inside_pokestop(img, templates):
 def identify_screen(img, templates):
     r = is_main_map(img, templates)
     if r[0]:
-        r[0]=pgconst.SCREEN_MAIN_MAP
-        return r
+        return (pgconst.SCREEN_MAIN_MAP, r)
     
     r = is_inside_pokestop(img, templates)
     if r[0]:
-        r[0]=pgconst.SCREEN_MAIN_MAP
-        return r
+        return (pgconst.SCREEN_INSIDE_POKESTOP, r)
     
     r = is_menu(img, templates)
     if r[0]:
-        r[0]=pgconst.SCREEN_MAIN_MENU
-        return r
+        return (pgconst.SCREEN_MAIN_MENU, r)
     
     return None
 
@@ -401,8 +398,40 @@ def click_donut(templates, center, r0, r1, count):
         a0 = a1
         
         
+def look_around(templates):
+    #click around center
+    click_donut(templates, (540, 960), 50, 500, 3)
+    
+    #get screen
+    img = get_screen_as_array()
+    
+    #identify screen
+    result = identify_screen(img, templates)
+    
+    #do actions based on the screen
+    if result is None:
+        #we got unknown scren, save it
+        save_array_as_png(img, "/tmp", "unknown")
+        
+        return
+    
+    if result[0] == pgconst.SCREEN_INSIDE_POKESTOP:
+        send_pokestop_touch_events(templates)
+    elif result[0] == pgconst.SCREEN_MAIN_MAP:
+        send_close_menu_touch_events(templates)
+    
+    return
+        
+        
+def send_pokestop_touch_events(templates):
+    script = templates[pgconst.TEMPLATE_INSIDE_POKESTOP][3]
+    subprocess.call(['/usr/bin/adb', 'shell', 'sh', script])
+    
+def send_close_menu_touch_events(templates):
+    script = templates[pgconst.TEMPLATE_MENU][4]
+    subprocess.call(['/usr/bin/adb', 'shell', 'sh', script])        
+    
         
         
         
-        
-        
+    
