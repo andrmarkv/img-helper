@@ -13,6 +13,10 @@ import time
 class MsgHandler:
     def __init__(self, templates):
         self.templates = templates
+        self.serverAndroid = None
+        
+    def setServerAndroid(self, serverAndroid):
+        self.serverAndroid = serverAndroid
 
     def processMsg(self, tokens):
         img = pgutil.get_screen_as_array()

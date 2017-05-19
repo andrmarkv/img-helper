@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
-from pg import server
+from pg import serverControl
+from pg import serverAndroid
 from pg import pgutil
 from pg import pgconst
 from pg import msgHandler
@@ -8,6 +9,7 @@ from pg import msgHandler
 import datetime
 import sys
 import os
+import thread
 import ConfigParser
 
 """
@@ -54,6 +56,16 @@ if (not isOK):
 #Read all template descriptions and populate dictionary
 templates = read_templates(config)
 
+serverIp = config.get("controlServer", "ipAddr")
+serverPort = config.getint("controlServer", "port")
+
+serverAndroidIp = config.get("androidServer", "ipAddr")
+serverAndroidPort = config.getint("androidServer", "port")
+
+#Create instance of the Android server to handle communication with the phone
+serverAndroid =  serverAndroid.ServerAndroid(serverAndroidIp, serverAndroidPort)
+thread.start_new_thread(serverAndroid.run)
+
 
 #TESTING
 #items_to_delete = pgconst.DEL_ITEMS_POKEYBALL | pgconst.DEL_ITEMS_NANAB_BERRY | pgconst.DEL_ITEMS_POTION | pgconst.DEL_ITEMS_RAZZ_BERRY | pgconst.DEL_ITEMS_REVIVE 
@@ -62,14 +74,18 @@ templates = read_templates(config)
 
 #pgutil.click_sector(templates, (540, 960), 50, 500, 30, 60)
 #pgutil.click_donut(templates, (540, 960), 50, 500, 6)
-pgutil.look_around(templates)
+#pgutil.look_around(templates)
+#sys.exit(1)
 
-sys.exit(1)
+
+serverAndroid.sendMessage(1, 2, "This is a test message", 100)
 
 #Create handler class that has to handle CONTROL messages
 handler = msgHandler.MsgHandler(templates)
 
 #Create instance of the server and pass handler to it
-server = server.ControlServer('localhost', 8002, handler)
+server = serverControl.ServerControl(serverIp, serverPort, handler, serverAndroid)
+
+
 server.test();
 server.run()

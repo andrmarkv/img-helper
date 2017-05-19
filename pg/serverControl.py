@@ -2,7 +2,8 @@
 Main class to handle communication with app.js application and process
 Control requests. It receives message on the UDP socket and calls handle
 method of the MsgHandler class. Server address and MsgHandler is devined duriing
-initialization of the instance
+initialization of the instance.
+serverAndroid is running instance of the phone controlling server
 """
 import socket
 
@@ -10,8 +11,8 @@ import pgutil
 
 msgId = 0;
 
-class ControlServer:
-    def __init__(self, ip, port, handler):
+class ServerControl:
+    def __init__(self, ip, port, handler, serverAndroid):
         self.server_address = (ip, port)
 
         # Create a UDP socket
@@ -20,7 +21,10 @@ class ControlServer:
         print 'ControlServer: starting up on %s port %s' % self.server_address
         self.sock.bind(self.server_address)
         
+        self.serverAndroid = serverAndroid
+        
         self.handler = handler
+        self.handler.setServerAndroid(serverAndroid)
     
     def test(self):
         print "ControlServer.test: self.server_address:" + str(self.server_address)
