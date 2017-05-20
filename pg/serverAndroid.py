@@ -20,6 +20,7 @@ class ServerAndroid:
 
         # Create a UDP socket
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         
         print 'ServerAndroid: starting up on %s port %s' % self.server_address
         self.sock.bind(self.server_address)
@@ -44,7 +45,7 @@ class ServerAndroid:
         print "Got message id: %d, type: %d, msglen: %d" % (id, type, len(msg))
 
         if type == pgconst.MESSAGE_ANDROID_TYPE_TEST:
-            self.sendMessageNoWait(msgId, pgconst.MESSAGE_ANDROID_TYPE_TEST, "OK!")
+            self.sendMessageNoWait(id, pgconst.MESSAGE_ANDROID_TYPE_TEST, "OK!")
         else:
             self.queue.put((id, type, msg))
         
@@ -84,11 +85,11 @@ class ServerAndroid:
         self.conn.sendall(struct.pack("<I", len(buf)))
         self.conn.sendall(buf)
         
-        (id, type, msg) = self.queue.get(timeout)
-        if id == msgId:
-            print msg
-        else:
-            print "Got wrong message, was expecting id: %d, received: %d" % (msgId, id)
+#         (id, type, msg) = self.queue.get(timeout)
+#         if id == msgId:
+#             print msg
+#         else:
+#             print "Got wrong message, was expecting id: %d, received: %d" % (msgId, id)
 
         return (type, msg)
     

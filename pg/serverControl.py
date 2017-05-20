@@ -8,6 +8,7 @@ serverAndroid is running instance of the phone controlling server
 import socket
 
 import pgutil
+import serverAndroid
 
 msgId = 0;
 
@@ -17,6 +18,7 @@ class ServerControl:
 
         # Create a UDP socket
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         
         print 'ControlServer: starting up on %s port %s' % self.server_address
         self.sock.bind(self.server_address)
@@ -29,6 +31,9 @@ class ServerControl:
     def test(self):
         print "ControlServer.test: self.server_address:" + str(self.server_address)
     
+    def process_test_android(self, tokens):
+        print "ControlServer.process_test_android, tokens: " + str(tokens)
+        self.serverAndroid.sendMessage(999, 2, "test touch events", 10)
         
     def run(self):
         while True:
@@ -55,3 +60,8 @@ class ServerControl:
                     sent = self.sock.sendto(msg, address)
                     print 'ControlServer.run: sent %s bytes back to %s' % (sent, address)
                     
+                if command == 'TEST_ANDROID':
+                    msgId = msgId + 1;
+                    self.process_test_android(tokens)
+                    msg = "%s;%d;%d" % ('TEST_ANDROID OK', msgId, 2)
+                    sent = self.sock.sendto(msg, address)
