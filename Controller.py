@@ -64,7 +64,7 @@ serverAndroidPort = config.getint("androidServer", "port")
 
 #Create instance of the Android server to handle communication with the phone
 serverAndroid =  serverAndroid.ServerAndroid(serverAndroidIp, serverAndroidPort)
-thread.start_new_thread(serverAndroid.run)
+thread.start_new_thread(serverAndroid.run, ())
 
 
 #TESTING
