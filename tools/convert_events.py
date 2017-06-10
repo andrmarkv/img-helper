@@ -78,7 +78,7 @@ results = list();
 for f in os.listdir(path):
     if f.endswith('.txt'):
         print f
-        convert_c(os.path.join(path, f));
-        #convert_file(os.path.join(path, f));
+        #convert_c(os.path.join(path, f));
+        convert_file(os.path.join(path, f));
         #convert_file_adb(os.path.join(path, f));
 
