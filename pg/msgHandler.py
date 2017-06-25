@@ -6,6 +6,7 @@ to be sent back to the GUI
 
 from pg import pgutil
 from pg import pgconst
+from pg import clientAndroid
 
 import subprocess
 import time
@@ -15,11 +16,11 @@ class MsgHandler:
         self.templates = templates
         self.serverAndroid = None
         
-    def setServerAndroid(self, serverAndroid):
-        self.serverAndroid = serverAndroid
+    def setClientAndroid(self, clientAndroid):
+        self.clientAndroid = clientAndroid
 
     def processMsg(self, tokens):
-        img = pgutil.get_screen_as_array()
+        img = clientAndroid.clientAndroid.get_screen_as_array()
                     
         if img is None:
             print "MsgHandler.processMsg: Error! Can't capture the screen."
@@ -37,7 +38,7 @@ class MsgHandler:
         
         print "MsgHandler.processMsg: Finished pokestop handling"
         
-        
+    
 
         
         

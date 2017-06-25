@@ -33,11 +33,15 @@ try:
     
     sleep(2);
     
-    tmp = sock.recv(4)
+    tmp = sock.recv(12, socket.MSG_WAITALL)
     if tmp:
-        data_len = struct.unpack("<I", tmp)[0]
+        data_len = struct.unpack_from("<I", tmp, 0)[0]
         print 'received length: ' + str(data_len)
-        data = sock.recv(data_len, socket.MSG_WAITALL)
+        msgId = struct.unpack_from("<I", tmp, 4)[0]
+        print 'received msgId: ' + str(msgId)
+        type = struct.unpack_from("<I", tmp, 8)[0]
+        print 'received type: ' + str(type)
+        data = sock.recv(data_len - 8, socket.MSG_WAITALL)
         print 'received bytes: ' + str(len(data))
         newFile = open("/tmp/test.png", "wb")
         newFileByteArray = bytearray(data)

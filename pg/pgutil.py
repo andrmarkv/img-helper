@@ -4,32 +4,13 @@ import os
 import sys
 import ast
 import subprocess
-import StringIO
 from PIL import Image
-import numpy as np
 import time
 import math
+import struct
 
 from pg import pgconst
 from time import sleep
-
-"""
-execute adb screen capture and return it
-as numpy array of bytes (grey two dimentional, suitable for cv2 operations)
-Array is equal to cv2.imread('file.png', 0)
-"""
-def get_screen_as_array():
-    out = subprocess.check_output(['/usr/bin/adb', 'exec-out', 'screencap' , '-p'])
-    if out is not None:
-        io = StringIO.StringIO(out)
-        im = Image.open(io)
-
-        if im is not None:
-            a = np.array(im.convert('L'))
-            return a
-
-        return None
-
 
 """
 Vefify if image contains template.
@@ -63,68 +44,83 @@ def match_template(image, template, min_reconition_val):
 
 
 """
-Read section of the INI file that describes particular screen.
-It should contain image and region
+Private helper method to read one coord value from the INI file
 """
-def read_template_description(config, section, path):
-    im = cv2.imread(os.path.join(path, config.get(section, "file")), 0)
-    
-    tmp = config.get(section, "region")
-    region = ast.literal_eval(tmp)
-
-    script = config.get(section, "script")
-    script_close = config.get(section, "script_close")
-    
-    template = (section, im, region, script, script_close)
-    
-    return template
-
+def __read_coord(config, section, name, coords):
+    tmp = config.get(section, name)
+    coord = ast.literal_eval(tmp)
+    coords[name] = coord
 
 """
-Read section of the INI file that describes clear_bag process.
-It should contain images and scripts to deal with all necessary
-situations on that screen
+Read coords section of the INI file
 """
-def read_template_clear_bag(config, path):
-    images = list()
+def read_coords(config):
+    coords = dict()
     
-    __get_templ_img(images, config, pgconst.TEMPLATE_CLEAR_BAG, path, "template_poke_ball_delete")
-    __get_templ_img(images, config, pgconst.TEMPLATE_CLEAR_BAG, path, "template_razz_berry_delete")
-    __get_templ_img(images, config, pgconst.TEMPLATE_CLEAR_BAG, path, "template_nanab_berry_delete")
-    __get_templ_img(images, config, pgconst.TEMPLATE_CLEAR_BAG, path, "template_potion_delete")
-    __get_templ_img(images, config, pgconst.TEMPLATE_CLEAR_BAG, path, "template_revive_delete")
+    __read_coord(config, "coords", pgconst.COORDS_CENTER, coords)
+    __read_coord(config, "coords", pgconst.COORDS_MAIN_MENU_BUTTON, coords)
+    __read_coord(config, "coords", pgconst.COORDS_CLOSE_POKE_STOP, coords)
+    __read_coord(config, "coords", pgconst.COORDS_ITEMS_BUTTON, coords)
+    __read_coord(config, "coords", pgconst.COORDS_DELETE_ITEM, coords)
+    __read_coord(config, "coords", pgconst.COORDS_DISCARD_PLUS_BUTTON, coords)
+    __read_coord(config, "coords", pgconst.COORDS_DISCARD_YES_BUTTON, coords)
+    __read_coord(config, "coords", pgconst.COORDS_CLOSE_ITEMS_MENU_BUTTON, coords)
     
-    scripts = list()
-    __get_templ_script(scripts, config, pgconst.TEMPLATE_CLEAR_BAG, "script_get_items_menu")
-    __get_templ_script(scripts, config, pgconst.TEMPLATE_CLEAR_BAG, "script_items_scroll")
-    __get_templ_script(scripts, config, pgconst.TEMPLATE_CLEAR_BAG, "script_items_delete")
-    __get_templ_script(scripts, config, pgconst.TEMPLATE_CLEAR_BAG, "script_items_increase_amount")
-    __get_templ_script(scripts, config, pgconst.TEMPLATE_CLEAR_BAG, "script_items_confirm_delete")
-    __get_templ_script(scripts, config, pgconst.TEMPLATE_CLEAR_BAG, "script_close_menu")
+    return coords
+
+"""
+Private method to simplify reading of the swipe events.
+It does some basic checking and exits script if verification fails
+"""        
+def __get_events_from_file(config, section, path, name, scripts):
+    fname = os.path.join(path, config.get(section, name))
+    buf = get_events_from_file(fname)
+    scripts[name] = buf
+
+"""
+Read section of the INI file that swite scriipts.
+"""
+def read_scripts(config, path):
+    scripts = dict()
     
-    template = (images, scripts)
+    __get_events_from_file(config, "swipes", path, pgconst.SCRIPT_SWIPE_POKESTOP, scripts)
+    __get_events_from_file(config, "swipes", path, pgconst.SCRIPT_THROW_BALL_NORMAL, scripts)
+    __get_events_from_file(config, "swipes", path, pgconst.SCRIPT_THROW_BALL_LONG, scripts)
+    __get_events_from_file(config, "swipes", path, pgconst.SCRIPT_THROW_BALL_SHORT, scripts)
+    __get_events_from_file(config, "swipes", path, pgconst.SCRIPT_SCROLL_ITEMS, scripts)
     
-    return template
+    return scripts
 
 """
 Private method to simplify reading of the template images.
 It does some basic checking and exits script if verification fails
 """
-def __get_templ_img(result_list, config, section, path, name):
-    tmp = cv2.imread(os.path.join(path, config.get(section, name)), 0)
+def __get_templ_img(config, section, path, name, images):
+    fname = os.path.join(path, config.get(section, name))
+    tmp = cv2.imread(fname, 0)
     if tmp is not None:
-        result_list.append(tmp)
+        images[name] = tmp
     else:
         print "ERROR! can't read template: " + section + " " + name
         sys.exit()
 
+
 """
-Private method to simplify reading of the template scripts.
-It does some basic checking and exits script if verification fails
-"""        
-def __get_templ_script(result_list, config, section, name):
-    fname = config.get(section, name)
-    result_list.append(fname)
+Read section of the INI file that describes image templates.
+"""
+def read_templates(config, path):
+    templates = dict()
+    
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POKEYDEX_BUTTON_MENU, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POKEYBALL_MAP_SCREEN, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POKEY_STOP_BUTTON, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POKE_BALL_DELETE, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_RAZZ_BERRY_DELETE, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_NANAB_BERRY_DELETE, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POTION_DELETE, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_REVIVE_DELETE, templates)
+    
+    return templates
 
 """
 Convenience function, it has to verify if current image is a main map of the game
@@ -189,75 +185,6 @@ def identify_screen(img, templates):
         return (pgconst.SCREEN_MAIN_MENU, r)
     
     return None
-
-
-"""
-Clear bag main function. It has to start from the main screen (map).
-Parameters:
-    items - mask of the items that needs to be deleted, see DEL_ITEMS_*
-    templates - dictionary of populated templates
-"""
-def clear_bag(items, templates):
-    print "started clear_bag process, item categories to delete: " + str(items)
-    #Check if we are on the main screen
-    img = get_screen_as_array()
-                    
-    if img is None:
-        print "clear_bag Error! Can't capture the screen."
-        return
-    
-    if not is_main_map(img, templates)[0]:
-        print "clear_bag Error! wrong start screen."
-        save_array_as_png(img, "/tmp/", "wrong_main_screen")
-        return
-    
-    images = templates[pgconst.TEMPLATE_CLEAR_BAG][0]
-    scripts = templates[pgconst.TEMPLATE_CLEAR_BAG][1]
-    
-    subprocess.call(['/usr/bin/adb', 'shell', 'sh', scripts[0]])
-    
-    print "Checking items..."
-    
-    #check items in the loop using scroll
-    for i in range(0,8):
-        #should be initial items list screen
-        img = get_screen_as_array()    
-        
-        resutls = is_items_visible(img, items, images)
-        if resutls is not None:
-            for r in resutls:
-                #Remove detected item from the list of items
-                items = items & (~r[0])
-                
-                #Click delete button for the given item, r[2][1] should give y of the center of the match region 
-                subprocess.call(['/usr/bin/adb', 'shell', 'sh', scripts[2], str(r[1][2][1])]) 
-                
-                #Click select how many items 
-                subprocess.call(['/usr/bin/adb', 'shell', 'sh', scripts[3]])
-                
-                #Remove double amount for pokeballs
-                #if r[0] == pgconst.DEL_ITEMS_POKEYBALL:
-                #    subprocess.call(['/usr/bin/adb', 'shell', 'sh', scripts[3]])
-                
-                #Click confirm deletion 
-                subprocess.call(['/usr/bin/adb', 'shell', 'sh', scripts[4]])
-                
-                print "deleted item: " + str(r[0])
-        
-        #Exit if we already processed all selected items
-        if items <= 0 :
-            sleep(2)
-            break
-        
-        #Scroll 
-        subprocess.call(['/usr/bin/adb', 'shell', 'sh', scripts[1]])
-        
-    #Exiting Items menu
-    subprocess.call(['/usr/bin/adb', 'shell', 'sh', scripts[5]])
-    
-    print "Finished clearing bag"
-    
-    return
 
 """
 Convenience function, it has to verify if current image contains one of the
@@ -374,54 +301,6 @@ def get_sector_dots(center, r0, r1, a0, a1):
     print result
                 
     return result
-    
-
-    
-def click_sector(templates, center, r0, r1, a0, a1):
-    script = templates[pgconst.TEMPLATE_MAIN_MAP][3]
-    
-    #get dots within specified sector
-    dots = get_sector_dots(center, r0, r1, a0, a1)
-    
-    #click selected dots
-    for dot in dots:
-        #Click delete button for the given item, r[2][1] should give y of the center of the match region 
-        subprocess.call(['/usr/bin/adb', 'shell', 'sh', script, str(dot[0]), str(dot[1])])    
-                        
-                        
-def click_donut(templates, center, r0, r1, count):
-    da = 360/count #this is angle of each sector
-    a0 = 0
-    for i in range (0, count):
-        a1 = a0 + da
-        click_sector(templates, center, r0, r1, a0, a1)
-        a0 = a1
-        
-        
-def look_around(templates):
-    #click around center
-    click_donut(templates, (540, 960), 50, 500, 3)
-    
-    #get screen
-    img = get_screen_as_array()
-    
-    #identify screen
-    result = identify_screen(img, templates)
-    
-    #do actions based on the screen
-    if result is None:
-        #we got unknown scren, save it
-        save_array_as_png(img, "/tmp", "unknown")
-        
-        return
-    
-    if result[0] == pgconst.SCREEN_INSIDE_POKESTOP:
-        send_pokestop_touch_events(templates)
-    elif result[0] == pgconst.SCREEN_MAIN_MAP:
-        send_close_menu_touch_events(templates)
-    
-    return
-        
         
 def send_pokestop_touch_events(templates):
     script = templates[pgconst.TEMPLATE_INSIDE_POKESTOP][3]
@@ -445,6 +324,32 @@ def hexdump(src, length=16):
     
     return tmp
         
+def get_events_from_file(file_name):
+    buf = ''
+    f = open(file_name, 'r')
+    lcount = 0
+    
+    
+    for line in f:
+        if len(line) <= 3:
+            continue
+        tokens = line.split(' ')
+
+        if len(tokens) != 3:
+            print "Got wrong line: " + line
+            continue
         
+        lcount = lcount + 1
+                    
+        for t in tokens:
+            v = int(t.rstrip(), 16)
+            u32 = v % 2**32
+            buf = buf + struct.pack("<I", u32)
+    
+    f.close()
+    
+    print('lcount: %d, bufLen: %d') % (lcount, len(buf))
+    
+    return buf        
         
     

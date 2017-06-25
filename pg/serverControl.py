@@ -7,9 +7,6 @@ serverAndroid is running instance of the phone controlling server
 """
 import socket
 
-import pgutil
-import serverAndroid
-
 msgId = 0;
 
 class ServerControl:
