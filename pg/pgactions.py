@@ -1,26 +1,17 @@
-import cv2
-
-import os
-import sys
-import ast
 import subprocess
-from PIL import Image
-import time
-import math
 
 from pg import pgconst, pgutil
 from time import sleep
-from pg.clientAndroid import clientAndroid
 
 
 """
 Clear bag main function. It has to start from the main screen (map).
 Parameters:
     items - mask of the items that needs to be deleted, see DEL_ITEMS_*
-    templates - dictionary of populated templates
+    ps - phone specific settings
     clientAndroid - client to handle Android requests
 """
-def clear_bag(items, templates, clientAndroid):
+def clear_bag(items, ps, clientAndroid):
     print "started clear_bag process, item categories to delete: " + str(items)
     #Check if we are on the main screen
     img = clientAndroid.get_screen_as_array()
@@ -29,15 +20,13 @@ def clear_bag(items, templates, clientAndroid):
         print "clear_bag Error! Can't capture the screen."
         return
     
-    if not pgutil.is_main_map(img, templates)[0]:
+    if not pgutil.is_main_map(img, ps)[0]:
         print "clear_bag Error! wrong start screen."
         pgutil.save_array_as_png(img, "/tmp/", "wrong_main_screen")
         return
     
-    images = templates[pgconst.TEMPLATE_CLEAR_BAG][0]
-    scripts = templates[pgconst.TEMPLATE_CLEAR_BAG][1]
-    
-    clientAndroid.send_swipe(scripts[0])
+    clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_MAIN_MENU_BUTTON))
+    clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_ITEMS_BUTTON))
     
     print "Checking items..."
     
@@ -46,21 +35,22 @@ def clear_bag(items, templates, clientAndroid):
         #should be initial items list screen
         img = clientAndroid.get_screen_as_array()    
         
-        resutls = pgutil.is_items_visible(img, items, images)
+        resutls = pgutil.is_items_visible(img, items, ps)
         if resutls is not None:
             for r in resutls:
                 #Remove detected item from the list of items
                 items = items & (~r[0])
                 
-                #Click delete button for the given item, r[2][1] should give y of the center of the match region
-                clientAndroid.send_touch(r[1][1][1], r[1][2][1]) 
+                #Click delete button for the given item, r[1][2][1] should give y of the center of the match region
+                (x, y) = ps.getCoord(pgconst.COORDS_DELETE_ITEM)
+                clientAndroid.send_touch((x, r[1][2][1]))
                 
                 #Click select how many items 
                 for j in range (0, 1):
-                    clientAndroid.send_touch(530, 580) #this is coordinates of plus_button
+                    clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_DISCARD_PLUS_BUTTON))
                 
                 #this is coordinates of yes button
-                clientAndroid.send_touch(364, 804)
+                clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_DISCARD_YES_BUTTON))
                 
                 print "deleted item: " + str(r[0])
         
@@ -70,18 +60,19 @@ def clear_bag(items, templates, clientAndroid):
             break
         
         #Scroll
-        clientAndroid.send_swipe(scripts[1]) 
+        clientAndroid.send_swipe(ps.getScript(pgconst.SCRIPT_SCROLL_ITEMS))
+        sleep(1)
         
     #Exiting Items menu
     #this is coordinates of yes button
-    clientAndroid.send_touch(364, 1184)
+    clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_CLOSE_ITEMS_MENU_BUTTON))
 
     
     print "Finished clearing bag"
     
     return
 
-def click_sector(center, r0, r1, a0, a1):
+def click_sector(center, r0, r1, a0, a1, clientAndroid):
     #get dots within specified sector
     dots = pgutil.get_sector_dots(center, r0, r1, a0, a1)
     
@@ -99,7 +90,7 @@ def click_donut(center, r0, r1, count):
         a0 = a1
         
         
-def look_around(templates):
+def look_around(templates, clientAndroid):
     #click around center
     click_donut((540, 960), 50, 500, 3)
     

@@ -6,6 +6,7 @@ from pg import pgutil
 from pg import pgconst
 from pg import msgHandler
 from pg import phoneSettings
+from pg import pgactions
 
 import datetime
 import sys
@@ -67,18 +68,17 @@ serverAndroidPort = config.getint("clientAndroid", "port")
 #Create instance of the Android server to handle communication with the phone
 clientAndroid =  clientAndroid.ClientAndroid(serverAndroidIp, serverAndroidPort)
 
-sys.exit(1)
-
 
 #TESTING
-#items_to_delete = pgconst.DEL_ITEMS_POKEYBALL | pgconst.DEL_ITEMS_NANAB_BERRY | pgconst.DEL_ITEMS_POTION | pgconst.DEL_ITEMS_RAZZ_BERRY | pgconst.DEL_ITEMS_REVIVE 
+items_to_delete = pgconst.DEL_ITEMS_POKEYBALL | pgconst.DEL_ITEMS_NANAB_BERRY | pgconst.DEL_ITEMS_POTION | pgconst.DEL_ITEMS_RAZZ_BERRY | pgconst.DEL_ITEMS_REVIVE
+pgactions.clear_bag(items_to_delete, ps, clientAndroid) 
 #items_to_delete = pgconst.DEL_ITEMS_POKEYBALL
 #pgutil.clear_bag(items_to_delete, templates)
 
 #pgutil.click_sector(templates, (540, 960), 50, 500, 30, 60)
 #pgutil.click_donut(templates, (540, 960), 50, 500, 6)
 #pgutil.look_around(templates)
-#sys.exit(1)
+sys.exit(1)
 
 
 clientAndroid.sendMessage(1, 2, "This is a test message", 100)

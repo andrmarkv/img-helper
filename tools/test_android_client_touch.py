@@ -22,33 +22,48 @@ sock.connect(server_address)
 try:
     
     # Send data
-    msgid = 12345
+    msgid = 0
     type = 3
     
-    print >>sys.stderr, 'sending %d, %d, %s' % (msgid, type, "Touch event")
-    v1 = struct.pack("<I", msgid)
-    v2 = struct.pack("<I", type)
-    x = struct.pack("<I", 500)
-    y = struct.pack("<I", 1000)
-    buf = v1 + v2 + x + y
-    sock.sendall(struct.pack("<I", len(buf)))
-    sock.sendall(buf)
-    print >>sys.stderr, 'message len: %d was sent' % (len(buf))
     
-    tmp = sock.recv(12, socket.MSG_WAITALL)
-    if tmp:
-        data_len = struct.unpack_from("<I", tmp, 0)[0]
-        print 'received length: ' + str(data_len)
-        msgId = struct.unpack_from("<I", tmp, 4)[0]
-        print 'received msgId: ' + str(msgId)
-        type = struct.unpack_from("<I", tmp, 8)[0]
-        print 'received type: ' + str(type)
-        data = sock.recv(data_len - 8, socket.MSG_WAITALL)
-        print 'received bytes: ' + str(len(data))
-        pgutil.hexdump(data)
+    for i in range (0, 10):
+    
+        print >>sys.stderr, 'sending %d, %d, %s' % (msgid, type, "Touch event")
+        v1 = struct.pack("<I", msgid)
+        v2 = struct.pack("<I", type)
+        x = struct.pack("<I", 500)
+        y = struct.pack("<I", 1000)
+        buf = v1 + v2 + x + y
+        sock.sendall(struct.pack("<I", len(buf)))
+        sock.sendall(buf)
+        print >>sys.stderr, 'message len: %d was sent' % (len(buf))
         
-    else:
-        print 'Can not read reply'
+        #We need to receive 12 initial bytes 
+        tmp = ''
+        while len(tmp) < 12:
+            b = sock.recv(12 - len(tmp), socket.MSG_WAITALL)
+            tmp = tmp + b
+            
+        if tmp:
+            data_len = struct.unpack_from("<I", tmp, 0)[0]
+            print 'received length: ' + str(data_len)
+            msgId = struct.unpack_from("<I", tmp, 4)[0]
+            print 'received msgId: ' + str(msgId)
+            type = struct.unpack_from("<I", tmp, 8)[0]
+            print 'received type: ' + str(type)
+            buf_size = data_len - 8
+            data = ''
+            while len(data) < buf_size:
+                b = sock.recv(buf_size - len(data), socket.MSG_WAITALL)
+                data = data + b
+            print 'received bytes: ' + str(len(data))
+            pgutil.hexdump(data)
+            
+        else:
+            print 'Can not read reply'
+            
+        msgid = msgid + 1
+        sleep(1)
 
 finally:
     print >>sys.stderr, 'closing socket'

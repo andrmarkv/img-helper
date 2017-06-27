@@ -10,3 +10,13 @@ class PhoneSettings:
         self.coords = coords
         self.scripts = scripts
         self.templates = templates
+    
+    def getCoord(self, name):
+        return self.coords[name]
+    
+    def getScript(self, name):
+        return self.scripts[name]
+    
+    def getTemplate(self, name):
+        return self.templates[name]
+    

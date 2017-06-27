@@ -2,6 +2,8 @@ import socket
 import sys
 import struct
 from time import sleep
+sys.path.append('../')
+from pg import pgutil
 
 if (len(sys.argv) < 2):
     print "Please specify server IP"
@@ -22,18 +24,24 @@ try:
     # Send data
     msgid = 12345
     type = 2
-    message = 'This is the message.  It will be repeated.'
-    print >>sys.stderr, 'sending %d, %d, %s' % (msgid, type, message)
+    print >>sys.stderr, 'sending %d, %d' % (msgid, type)
     v1 = struct.pack("<I", msgid)
     v2 = struct.pack("<I", type)
-    buf = v1 + v2 + message
+    buf = v1 + v2
     sock.sendall(struct.pack("<I", len(buf)))
     sock.sendall(buf)
     print >>sys.stderr, 'message len: %d was sent' % (len(buf))
     
     sleep(2);
     
-    tmp = sock.recv(12, socket.MSG_WAITALL)
+    #We need to receive 12 initial bytes 
+    tmp = ''
+    while len(tmp) < 12:
+        b = sock.recv(12 - len(tmp), socket.MSG_WAITALL)
+        tmp = tmp + b
+
+    pgutil.hexdump(tmp)
+    
     if tmp:
         data_len = struct.unpack_from("<I", tmp, 0)[0]
         print 'received length: ' + str(data_len)
@@ -41,8 +49,14 @@ try:
         print 'received msgId: ' + str(msgId)
         type = struct.unpack_from("<I", tmp, 8)[0]
         print 'received type: ' + str(type)
-        data = sock.recv(data_len - 8, socket.MSG_WAITALL)
+        
+        buf_size = data_len - 8
+        data = ''
+        while len(data) < buf_size:
+            b = sock.recv(buf_size - len(data), socket.MSG_WAITALL)
+            data = data + b
         print 'received bytes: ' + str(len(data))
+        
         newFile = open("/tmp/test.png", "wb")
         newFileByteArray = bytearray(data)
         newFile.write(newFileByteArray)

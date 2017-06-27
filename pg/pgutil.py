@@ -126,7 +126,7 @@ def read_templates(config, path):
 Convenience function, it has to verify if current image is a main map of the game
 Parameters:
     img - current screenshot
-    templates - dictionary of populated templates
+    ps - phone specific settings
 Returns:
     tuple (True/False, min_val, center, min_loc)
     where - True - if match was found/False - all other cases
@@ -134,15 +134,15 @@ Returns:
     center - center of the identified minimum
     min_loc - top left corner of the identified minimum 
 """
-def is_main_map(img, templates):
-    r = match_template(img, templates[pgconst.TEMPLATE_MAIN_MAP][1], pgconst.MIN_RECOGNITION_VAL)
+def is_main_map(img, ps):
+    r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_POKEYBALL_MAP_SCREEN), pgconst.MIN_RECOGNITION_VAL)
     return r
 
 """
 Convenience function, it has to verify if current image is a main menu of the game
 Parameters:
     img - current screenshot
-    templates - dictionary of populated templates
+    ps - phone specific settings
 Returns:
     tuple (True/False, min_val, center, min_loc)
     where - True - if match was found/False - all other cases
@@ -150,15 +150,15 @@ Returns:
     center - center of the identified minimum
     min_loc - top left corner of the identified minimum
 """
-def is_menu(img, templates):
-    r = match_template(img, templates[pgconst.TEMPLATE_MENU][1], pgconst.MIN_RECOGNITION_VAL)
+def is_menu(img, ps):
+    r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_POKEYDEX_BUTTON_MENU), pgconst.MIN_RECOGNITION_VAL)
     return r
 
 """
 Convenience function, it has to verify if current image is inside pokestop screen
 Parameters:
     img - current screenshot
-    templates - dictionary of populated templates
+    ps - phone specific settings
 Returns:
     tuple (True/False, min_val, center, min_loc)
     where - True - if match was found/False - all other cases
@@ -166,21 +166,21 @@ Returns:
     center - center of the identified minimum
     min_loc - top left corner of the identified minimum
 """
-def is_inside_pokestop(img, templates):
-    r = match_template(img, templates[pgconst.TEMPLATE_INSIDE_POKESTOP][1], pgconst.MIN_RECOGNITION_VAL)
+def is_inside_pokestop(img, ps):
+    r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_POKEY_STOP_BUTTON), pgconst.MIN_RECOGNITION_VAL)
     return r
     
 
-def identify_screen(img, templates):
-    r = is_main_map(img, templates)
+def identify_screen(img, ps):
+    r = is_main_map(img, ps)
     if r[0]:
         return (pgconst.SCREEN_MAIN_MAP, r)
     
-    r = is_inside_pokestop(img, templates)
+    r = is_inside_pokestop(img, ps)
     if r[0]:
         return (pgconst.SCREEN_INSIDE_POKESTOP, r)
     
-    r = is_menu(img, templates)
+    r = is_menu(img, ps)
     if r[0]:
         return (pgconst.SCREEN_MAIN_MENU, r)
     
@@ -192,7 +192,7 @@ items that we want to delete from the bag
 Parameters:
     img - current screenshot
     items - mask specifying which items we are checking
-    images - template images
+    ps - phone specific settings
 Returns:
     list of resutl matches - if at leas one match was found
     each element of the result is a tuple that consist of:
@@ -200,31 +200,31 @@ Returns:
         - original result from the match template function
     None - all other cases
 """
-def is_items_visible(img, items, images):
+def is_items_visible(img, items, ps):
     result = list()
 
     if items & pgconst.DEL_ITEMS_POKEYBALL:
-        r = match_template(img, images[0], pgconst.MIN_RECOGNITION_VAL * 0.1)
+        r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_POKE_BALL_DELETE), pgconst.MIN_RECOGNITION_VAL * 0.1)
         if r[0]:
             result.append((pgconst.DEL_ITEMS_POKEYBALL, r))
     
     if items & pgconst.DEL_ITEMS_RAZZ_BERRY:
-        r = match_template(img, images[1], pgconst.MIN_RECOGNITION_VAL * 0.1)
+        r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_RAZZ_BERRY_DELETE), pgconst.MIN_RECOGNITION_VAL * 0.1)
         if r[0]:
             result.append((pgconst.DEL_ITEMS_RAZZ_BERRY, r))
         
     if items & pgconst.DEL_ITEMS_NANAB_BERRY:
-        r = match_template(img, images[2], pgconst.MIN_RECOGNITION_VAL * 0.1)
+        r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_NANAB_BERRY_DELETE), pgconst.MIN_RECOGNITION_VAL * 0.1)
         if r[0]:
             result.append((pgconst.DEL_ITEMS_NANAB_BERRY, r))
         
     if items & pgconst.DEL_ITEMS_POTION:
-        r = match_template(img, images[3], pgconst.MIN_RECOGNITION_VAL * 0.1)
+        r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_POTION_DELETE), pgconst.MIN_RECOGNITION_VAL * 0.1)
         if r[0]:
             result.append((pgconst.DEL_ITEMS_POTION, r))
         
     if items & pgconst.DEL_ITEMS_REVIVE:
-        r = match_template(img, images[4], pgconst.MIN_RECOGNITION_VAL * 0.1)
+        r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_REVIVE_DELETE), pgconst.MIN_RECOGNITION_VAL * 0.1)
         if r[0]:
             result.append((pgconst.DEL_ITEMS_REVIVE, r))
     
@@ -302,14 +302,6 @@ def get_sector_dots(center, r0, r1, a0, a1):
                 
     return result
         
-def send_pokestop_touch_events(templates):
-    script = templates[pgconst.TEMPLATE_INSIDE_POKESTOP][3]
-    subprocess.call(['/usr/bin/adb', 'shell', 'sh', script])
-    
-def send_close_menu_touch_events(templates):
-    script = templates[pgconst.TEMPLATE_MENU][4]
-    subprocess.call(['/usr/bin/adb', 'shell', 'sh', script])        
-
 def hexdump(src, length=16):
     result = []
     digits = 4 if isinstance(src, unicode) else 2

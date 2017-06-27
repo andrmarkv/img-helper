@@ -7,14 +7,13 @@ Handler is called based on the type of the message
 """
 import socket
 import struct
+from time import sleep
 
 import StringIO
 from PIL import Image
 import numpy as np
 
-from pg import pgconst
-
-msgId = 0;
+from pg import pgconst, pgutil
 
 class ClientAndroid:
     def __init__(self, ip, port):
@@ -31,6 +30,8 @@ class ClientAndroid:
         #Set timeout for blocking read
         self.sock.settimeout(pgconst.ANDROID_CLIENT_RECV_TIMEOUT)
         
+        self.msgId = 0;
+        
     """
     Send message to the Android and wait for the response.
     Waiting is blocking for up to timeout seconds - timeout is defined in init method.
@@ -38,14 +39,14 @@ class ClientAndroid:
     In case of error it returns (None, None)
     """
     def sendMessage(self, mtype, msg):
-        if self.conn is None:
+        if self.sock is None:
             print "Error, can't send message - no connected client"
             return
         
         #increment message counter
-        msgId = msgId + 1
+        self.msgId = self.msgId + 1
         
-        v1 = struct.pack("<I", msgId)
+        v1 = struct.pack("<I", self.msgId)
         v2 = struct.pack("<I", mtype)
         
         if (msg != None):
@@ -53,11 +54,11 @@ class ClientAndroid:
         else:
             buf = v1 + v2
             
-        self.conn.sendall(struct.pack("<I", len(buf)))
-        self.conn.sendall(buf)
+        self.sock.sendall(struct.pack("<I", len(buf)))
+        self.sock.sendall(buf)
         
         #Wait for response and return type and data
-        (t, data) = self.getResponse(msgId)
+        (t, data) = self.getResponse(self.msgId)
 
         return (t, data)
     
@@ -69,10 +70,17 @@ class ClientAndroid:
     def getResponse(self, reqMsgId):
         tmp = None
         try:
-            tmp = self.sock.recv(12, socket.MSG_WAITALL)
+            #We need to receive 12 initial bytes 
+            tmp = ''
+            while len(tmp) < 12:
+                b = self.sock.recv(12 - len(tmp), socket.MSG_WAITALL)
+                tmp = tmp + b
         except socket.timeout, e:
             print 'Error! recv timed out, e:' + str(e)
-            
+        
+        print 'received msg header:'
+        pgutil.hexdump(tmp)    
+        
         if tmp:
             data_len = struct.unpack_from("<I", tmp, 0)[0]
             print 'received length: ' + str(data_len)
@@ -80,9 +88,14 @@ class ClientAndroid:
             print 'received msgId: ' + str(msgId)
             t = struct.unpack_from("<I", tmp, 8)[0]
             print 'received type: ' + str(t)
-            data = self.sock.recv(data_len - 8, socket.MSG_WAITALL)
-            print 'received bytes: ' + str(len(data))
             
+            buf_size = data_len - 8
+            data = ''
+            while len(data) < buf_size:
+                b = self.sock.recv(buf_size - len(data), socket.MSG_WAITALL)
+                data = data + b
+            print 'received bytes: ' + str(len(data))
+                
             if (reqMsgId != msgId):
                 print 'ERROR! got wrong msgId in response %d/%d' % (reqMsgId, msgId)    
             
@@ -100,7 +113,7 @@ class ClientAndroid:
     def get_screen_as_array(self):
         (t, data) = self.sendMessage(pgconst.MESSAGE_ANDROID_SCREEN_CAP, None)
         
-        if (t != None and type == pgconst.MESSAGE_ANDROID_SCREEN_CAP):
+        if (t != None and t == pgconst.MESSAGE_ANDROID_SCREEN_CAP):
             io = StringIO.StringIO(data)
             im = Image.open(io)
     
@@ -117,7 +130,7 @@ class ClientAndroid:
     """
     Send touch to the Android device
     """
-    def send_touch(self, x, y):
+    def send_touch(self, (x, y), sleep_after=1):
         #pack coordinates into the message
         xb = struct.pack("<I", x)
         yb = struct.pack("<I", y)
@@ -125,8 +138,10 @@ class ClientAndroid:
         
         (t, data) = self.sendMessage(pgconst.MESSAGE_ANDROID_SEND_TOUCH, buf)
         
-        if (t != None and type == pgconst.MESSAGE_ANDROID_SEND_TOUCH):
+        if (t != None and t == pgconst.MESSAGE_ANDROID_SEND_TOUCH):
             print "Send touch: " + str(data)
+            if sleep_after > 0:
+                sleep(sleep_after)
             return 1;
     
         return None

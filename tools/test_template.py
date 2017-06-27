@@ -1,7 +1,5 @@
-import cv2
-from matplotlib import pyplot as plt
 import datetime
-import glob, os
+import os
 from PIL import Image
 import numpy as np
 from pg import pgutil
@@ -44,7 +42,8 @@ def check_image(image, template):
             
     return result
             
-template = np.array(Image.open('../conf/31d53011/template_poke_ball_delete.png').convert('L'))
+#template = np.array(Image.open('../conf/31d53011/template_poke_ball_delete.png').convert('L'))
+template = np.array(Image.open('../conf/redmi3_720_1280/template_potion_delete.png').convert('L'))
 
 path = "../tests/31d53011/screens/"
 #path = "tests/d0b760087cf3/"
