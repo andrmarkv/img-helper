@@ -2,53 +2,49 @@ import cv2
 from matplotlib import pyplot as plt
 import datetime
 import glob, os
+from PIL import Image
+import numpy as np
+from pg import pgutil
 
 score = 0;
 MIN_RECOGNITION_VAL = 0.01; #if we get below that value indicates that we found template
+count = 0
 
 def check_image(image, template):
     global score
+    global count
     
     t0 = datetime.datetime.now()
     
-    img = cv2.imread(image, 0)
-    w, h = template.shape[::-1]
+    try:
+        img = np.array(Image.open(image).convert('L'))
+    except:
+        print "Can't open file: " + image
+        return None
     
-    method = cv2.TM_SQDIFF_NORMED
-    #method = cv2.TM_SQDIFF
-    
-    result = None;
-    
-    res = cv2.matchTemplate(img, template, method)
-    min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
-    
-    top_left = min_loc
-    bottom_right = (top_left[0] + w, top_left[1] + h)
+    r = pgutil.match_template(img, template, MIN_RECOGNITION_VAL)
     
     t1 = datetime.datetime.now()
     i = image.find("inside-pokestop")
     if i >= 0:
-        if min_val < MIN_RECOGNITION_VAL:
-            result = (min_val, min_loc[0], min_loc[1], str(t1 - t0), image, 'OK');
-            print ("OK   min_val=%.6f, min_loc=(%04d,%04d), time=%s, file: %s" % (min_val, min_loc[0], min_loc[1], str(t1 - t0), image))
+        if r[0] :
+            result = (r[1], r[2][0], r[2][1], str(t1 - t0), image, 'OK');
         else:
-            result = (min_val, min_loc[0], min_loc[1], str(t1 - t0), image, 'FAIL');
-            print ("FAIL min_val=%.6f, min_loc=(%04d,%04d), time=%s, file: %s" % (min_val, min_loc[0], min_loc[1], str(t1 - t0), image))
+            result = (r[1], r[2][0], r[2][1], str(t1 - t0), image, 'FAIL');
             score = score + 1
     else:
-        if min_val < MIN_RECOGNITION_VAL:
-            result = (min_val, min_loc[0], min_loc[1], str(t1 - t0), image, 'FAIL');
-            print ("FAIL min_val=%.6f, min_loc=(%04d,%04d), time=%s, file: %s" % (min_val, min_loc[0], min_loc[1], str(t1 - t0), image))
+        if r[0]:
+            result = (r[1], r[2][0], r[2][1], str(t1 - t0), image, 'FAIL');
             score = score + 1
         else:
-            result = (min_val, min_loc[0], min_loc[1], str(t1 - t0), image, 'OK');
-            print ("OK   min_val=%.6f, min_loc=(%04d,%04d), time=%s, file: %s" % (min_val, min_loc[0], min_loc[1], str(t1 - t0), image))
+            result = (r[1], r[2][0], r[2][1], str(t1 - t0), image, 'OK');
+    
+    count = count + 1        
+    print 'processed: ' + str(count)
             
     return result
             
-template = cv2.imread('../tests/31d53011/pokey_stop_button.png', 0)
-#template = cv2.imread('tests/31d53011/pokeydex_button_menu.png', 0)
-#template = cv2.imread('tests/31d53011/pokeyball_map_screen.png', 0)
+template = np.array(Image.open('../conf/31d53011/template_poke_ball_delete.png').convert('L'))
 
 path = "../tests/31d53011/screens/"
 #path = "tests/d0b760087cf3/"
