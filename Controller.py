@@ -70,14 +70,14 @@ clientAndroid =  clientAndroid.ClientAndroid(serverAndroidIp, serverAndroidPort)
 
 
 #TESTING
-items_to_delete = pgconst.DEL_ITEMS_POKEYBALL | pgconst.DEL_ITEMS_NANAB_BERRY | pgconst.DEL_ITEMS_POTION | pgconst.DEL_ITEMS_RAZZ_BERRY | pgconst.DEL_ITEMS_REVIVE
-pgactions.clear_bag(items_to_delete, ps, clientAndroid) 
-#items_to_delete = pgconst.DEL_ITEMS_POKEYBALL
-#pgutil.clear_bag(items_to_delete, templates)
+#items_to_delete = pgconst.DEL_ITEMS_POKEYBALL | pgconst.DEL_ITEMS_NANAB_BERRY | pgconst.DEL_ITEMS_POTION | pgconst.DEL_ITEMS_RAZZ_BERRY | pgconst.DEL_ITEMS_REVIVE
+#pgactions.clear_bag(clientAndroid, items_to_delete, ps)
+
 
 #pgutil.click_sector(templates, (540, 960), 50, 500, 30, 60)
 #pgutil.click_donut(templates, (540, 960), 50, 500, 6)
-#pgutil.look_around(templates)
+pgactions.look_around(clientAndroid, ps)
+
 sys.exit(1)
 
 

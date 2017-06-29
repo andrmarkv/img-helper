@@ -59,12 +59,13 @@ def read_coords(config):
     
     __read_coord(config, "coords", pgconst.COORDS_CENTER, coords)
     __read_coord(config, "coords", pgconst.COORDS_MAIN_MENU_BUTTON, coords)
-    __read_coord(config, "coords", pgconst.COORDS_CLOSE_POKE_STOP, coords)
+    __read_coord(config, "coords", pgconst.COORDS_EXIT_BUTTON, coords)
     __read_coord(config, "coords", pgconst.COORDS_ITEMS_BUTTON, coords)
     __read_coord(config, "coords", pgconst.COORDS_DELETE_ITEM, coords)
     __read_coord(config, "coords", pgconst.COORDS_DISCARD_PLUS_BUTTON, coords)
     __read_coord(config, "coords", pgconst.COORDS_DISCARD_YES_BUTTON, coords)
     __read_coord(config, "coords", pgconst.COORDS_CLOSE_ITEMS_MENU_BUTTON, coords)
+    __read_coord(config, "coords", pgconst.COORDS_LEAVE_CATCH_POKEMON_BUTTON, coords)
     
     return coords
 
@@ -113,13 +114,18 @@ def read_templates(config, path):
     
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POKEYDEX_BUTTON_MENU, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POKEYBALL_MAP_SCREEN, templates)
-    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POKEY_STOP_BUTTON, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POOKEY_STOP_EMPTY_SLOT, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_EXIT_BUTTON, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_REVIVE_DELETE, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POKE_BALL_DELETE, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_RAZZ_BERRY_DELETE, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_NANAB_BERRY_DELETE, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POTION_DELETE, templates)
-    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_REVIVE_DELETE, templates)
-    
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_CATCH_POKEMON_OK_BUTTON, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_CAUTCH_POKEMON_STATS_SCREEN, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_GYM_MAIN_SCREEN, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_CATCH_POKEMON_SCREEN, templates)
+
     return templates
 
 """
@@ -167,10 +173,35 @@ Returns:
     min_loc - top left corner of the identified minimum
 """
 def is_inside_pokestop(img, ps):
-    r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_POKEY_STOP_BUTTON), pgconst.MIN_RECOGNITION_VAL)
+    r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_POOKEY_STOP_EMPTY_SLOT), pgconst.MIN_RECOGNITION_VAL)
     return r
     
 
+def is_inside_gym(img, ps):
+    r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_GYM_MAIN_SCREEN), pgconst.MIN_RECOGNITION_VAL)
+    return r
+
+def does_has_exit_button(img, ps):
+    r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_EXIT_BUTTON), pgconst.MIN_RECOGNITION_VAL)
+    return r
+
+def is_catching_pokemon(img, ps):
+    r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_CATCH_POKEMON_SCREEN), pgconst.MIN_RECOGNITION_VAL)
+    return r
+
+"""
+Tghat is very important function. It has to be able to identify display screen in different situations.
+Ideally it should cover all possible situations.
+Parameters:
+    img - current screenshot
+    ps - phone specific settings
+Returns:
+    tuple (True/False, min_val, center, min_loc)
+    where - True - if match was found/False - all other cases
+    min_val - minimum value
+    center - center of the identified minimum
+    min_loc - top left corner of the identified minimum
+"""
 def identify_screen(img, ps):
     r = is_main_map(img, ps)
     if r[0]:
@@ -183,6 +214,14 @@ def identify_screen(img, ps):
     r = is_menu(img, ps)
     if r[0]:
         return (pgconst.SCREEN_MAIN_MENU, r)
+    
+    r = is_inside_gym(img, ps)
+    if r[0]:
+        return (pgconst.SCREEN_INSIDE_GYM, r)
+    
+    r = is_catching_pokemon(img, ps)
+    if r[0]:
+        return (pgconst.SCREEN_CATCHING_POKEMON, r)
     
     return None
 
@@ -249,7 +288,7 @@ def save_array_as_png(img, path, file_name):
 Generate coordinates for the touch events that have to happen
 within some logical sector. Parameters:
     - center - (x, y) of the sector's center
-    - r0 - what is the start radius of the sector - not dots close to the center then that value
+    - r0 - what is the start radius of the sector (there will no be any dot close to the center then that value)
     - r1 - what is the end radius of the sector, how far from center to go
     - a0 - start angle of the sector in degrees
     - a1 - end angle of the sector in degrees

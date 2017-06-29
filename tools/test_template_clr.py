@@ -23,14 +23,15 @@ def check_image(img, template):
 
 #template = np.array(Image.open('../conf/redmi3_720_1280/template_potion_delete.png').convert('L'))            
 #template = np.array(Image.open('../conf/redmi3_720_1280/template_poke_ball_delete.png').convert('L'))
-template = np.array(Image.open('../conf/redmi3_720_1280/template_nanab_berry_delete.png').convert('L'))
+#template = np.array(Image.open('../conf/redmi3_720_1280/template_nanab_berry_delete.png').convert('L'))
 #template = np.array(Image.open('../conf/redmi3_720_1280/template_razz_berry_delete.png').convert('L'))
 #template = np.array(Image.open('../conf/redmi3_720_1280/template_revive_delete.png').convert('L'))
+template = np.array(Image.open('../conf/redmi3_720_1280/template_catch_pokemon_screen.png').convert('L'))
 
 
 
 #image = np.array(Image.open('/tmp/wrong_main_screen_1498505784.png'))
-image = np.array(Image.open('/tmp/test.png').convert('L'))
+image = np.array(Image.open('/tmp/test_pokemon3.png').convert('L'))
 
 results = list();
 
