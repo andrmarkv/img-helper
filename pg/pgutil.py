@@ -122,9 +122,11 @@ def read_templates(config, path):
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_NANAB_BERRY_DELETE, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POTION_DELETE, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_CATCH_POKEMON_OK_BUTTON, templates)
-    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_CAUTCH_POKEMON_STATS_SCREEN, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_CATCH_POKEMON_STATS_SCREEN, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_GYM_MAIN_SCREEN, templates)
-    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_CATCH_POKEMON_SCREEN, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_CATCH_POKEMON_SCREEN1, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_CATCH_POKEMON_SCREEN2, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_CATCH_POKEMON_SCREEN3, templates)
 
     return templates
 
@@ -181,12 +183,28 @@ def is_inside_gym(img, ps):
     r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_GYM_MAIN_SCREEN), pgconst.MIN_RECOGNITION_VAL)
     return r
 
-def does_has_exit_button(img, ps):
+def does_have_exit_button(img, ps):
     r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_EXIT_BUTTON), pgconst.MIN_RECOGNITION_VAL)
     return r
 
 def is_catching_pokemon(img, ps):
-    r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_CATCH_POKEMON_SCREEN), pgconst.MIN_RECOGNITION_VAL)
+    r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_CATCH_POKEMON_SCREEN1), pgconst.MIN_RECOGNITION_VAL)
+    if r[0]: return r
+    
+    r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_CATCH_POKEMON_SCREEN2), pgconst.MIN_RECOGNITION_VAL)
+    if r[0]: return r
+    
+    r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_CATCH_POKEMON_SCREEN3), pgconst.MIN_RECOGNITION_VAL)
+    if r[0]: return r
+    
+    return r
+
+def is_cougth_pokemon_popup(img, ps):
+    r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_CATCH_POKEMON_OK_BUTTON), pgconst.MIN_RECOGNITION_VAL)
+    return r
+
+def is_pokemon_stats_popup(img, ps):
+    r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_CATCH_POKEMON_STATS_SCREEN), pgconst.MIN_RECOGNITION_VAL)
     return r
 
 """
@@ -222,6 +240,57 @@ def identify_screen(img, ps):
     r = is_catching_pokemon(img, ps)
     if r[0]:
         return (pgconst.SCREEN_CATCHING_POKEMON, r)
+    
+    r = is_pokemon_stats_popup(img, ps)
+    if r[0]:
+        return (pgconst.SCREEN_POKEMON_STATS_POPUP, r)
+    
+    
+    #That check has to be the last as it is generic verification
+    r = does_have_exit_button(img, ps)
+    if r[0]:
+        return (pgconst.SCREEN_HAS_EXIT_BUTTON, r)
+    
+    return None
+
+
+"""
+Handle catching pokemon situations function. It has to be able to identify display screen in different situations.
+Ideally it should cover all possible situations.
+Parameters:
+    clientAndroid - client to handle Android requests
+    ps - phone specific settings
+Returns:
+    tuple (True/False, min_val, center, min_loc)
+    where - True - if match was found/False - all other cases
+    min_val - minimum value
+    center - center of the identified minimum
+    min_loc - top left corner of the identified minimum
+"""
+def identify_catch_screen(clientAndroid, ps):
+    img = clientAndroid.get_screen_as_array()
+    
+    r = is_cougth_pokemon_popup(img, ps)
+    if r[0]:
+        return (pgconst.SCREEN_CAUGTH_POKEMON_POPUP, r)
+    
+    r = is_pokemon_stats_popup(img, ps)
+    if r[0]:
+        return (pgconst.SCREEN_POKEMON_STATS_POPUP, r)
+    
+    r = is_catching_pokemon(img, ps)
+    if r[0]:
+        return (pgconst.SCREEN_CATCHING_POKEMON, r)
+    
+    r = is_main_map(img, ps)
+    if r[0]:
+        return (pgconst.SCREEN_MAIN_MAP, r)
+    
+    
+    #That check has to be the last as it is generic verification
+    r = does_have_exit_button(img, ps)
+    if r[0]:
+        return (pgconst.SCREEN_HAS_EXIT_BUTTON, r)
     
     return None
 
@@ -337,7 +406,7 @@ def get_sector_dots(center, r0, r1, a0, a1):
             
             #print ("j=%d, b1=%d, dx=%d, dy=%d, a=%d, dot=(%d;%d)") % (j, b1, dx, dy, a, dot[0], dot[1])
 
-    print result
+    #print "Got dots coordinates: " + result
                 
     return result
         

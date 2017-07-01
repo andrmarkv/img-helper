@@ -10,7 +10,7 @@ import socket
 msgId = 0;
 
 class ServerControl:
-    def __init__(self, ip, port, handler, serverAndroid):
+    def __init__(self, ip, port, handler):
         self.server_address = (ip, port)
 
         # Create a UDP socket
@@ -20,13 +20,7 @@ class ServerControl:
         print 'ControlServer: starting up on %s port %s' % self.server_address
         self.sock.bind(self.server_address)
         
-        self.serverAndroid = serverAndroid
-        
         self.handler = handler
-        self.handler.setServerAndroid(serverAndroid)
-    
-    def test(self):
-        print "ControlServer.test: self.server_address:" + str(self.server_address)
     
     def process_test_android(self, tokens):
         print "ControlServer.process_test_android, tokens: " + str(tokens)

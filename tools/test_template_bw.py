@@ -1,7 +1,11 @@
+#!/usr/bin/python
+
 import datetime
 import os
+import sys
 from PIL import Image
 import numpy as np
+sys.path.append('../')
 from pg import pgutil
 
 score = 0;
@@ -21,9 +25,16 @@ def check_image(img, template):
             
     return result
 
-template = np.array(Image.open('../conf/redmi3_720_1280/template_pokeyball_map_screen1.png').convert('L'))            
 
-image = np.array(Image.open('/tmp/wrong_main_screen_1498591220.png'))
+if (len(sys.argv) < 3):
+    print "pleae specify template_file and test_file"
+    sys.exit(1) 
+
+
+#template = np.array(Image.open('../conf/redmi3_720_1280/template_pokeyball_map_screen1.png').convert('L'))            
+template = np.array(Image.open(sys.argv[1]).convert('L'))
+
+image = np.array(Image.open(sys.argv[2]))
 
 results = list();
 

@@ -68,7 +68,6 @@ serverAndroidPort = config.getint("clientAndroid", "port")
 #Create instance of the Android server to handle communication with the phone
 clientAndroid =  clientAndroid.ClientAndroid(serverAndroidIp, serverAndroidPort)
 
-
 #TESTING
 #items_to_delete = pgconst.DEL_ITEMS_POKEYBALL | pgconst.DEL_ITEMS_NANAB_BERRY | pgconst.DEL_ITEMS_POTION | pgconst.DEL_ITEMS_RAZZ_BERRY | pgconst.DEL_ITEMS_REVIVE
 #pgactions.clear_bag(clientAndroid, items_to_delete, ps)
@@ -76,19 +75,16 @@ clientAndroid =  clientAndroid.ClientAndroid(serverAndroidIp, serverAndroidPort)
 
 #pgutil.click_sector(templates, (540, 960), 50, 500, 30, 60)
 #pgutil.click_donut(templates, (540, 960), 50, 500, 6)
-pgactions.look_around(clientAndroid, ps)
+#pgactions.catch_pokemon(clientAndroid, ps)
+#pgactions.look_around(clientAndroid, ps)
 
-sys.exit(1)
 
+# sys.exit(1)
 
-clientAndroid.sendMessage(1, 2, "This is a test message", 100)
 
 #Create handler class that has to handle CONTROL messages
-# handler = msgHandler.MsgHandler(templates)
+handler = msgHandler.MsgHandler(clientAndroid, ps)
 
 #Create instance of the server and pass handler to it
-# server = serverControl.ServerControl(serverIp, serverPort, handler, clientAndroid)
-
-
-# server.test();
-# server.run()
+server = serverControl.ServerControl(serverIp, serverPort, handler)
+server.run()

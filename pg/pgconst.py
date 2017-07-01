@@ -13,6 +13,8 @@ SCREEN_INSIDE_POKESTOP = 3
 SCREEN_INSIDE_GYM = 4
 SCREEN_HAS_EXIT_BUTTON = 5
 SCREEN_CATCHING_POKEMON = 6
+SCREEN_CAUGTH_POKEMON_POPUP = 7
+SCREEN_POKEMON_STATS_POPUP = 8
 
 MESSAGE_ANDROID_TYPE_TEST = 1
 MESSAGE_ANDROID_SCREEN_CAP = 2
@@ -48,6 +50,8 @@ TEMPLATE_POTION_DELETE = "template_potion_delete"
 TEMPLATE_REVIVE_DELETE= "template_revive_delete"
 
 TEMPLATE_CATCH_POKEMON_OK_BUTTON = "template_catch_pokemon_OK_button"
-TEMPLATE_CAUTCH_POKEMON_STATS_SCREEN = "template_cautch_pokemon_stats_screen"
+TEMPLATE_CATCH_POKEMON_STATS_SCREEN = "template_catch_pokemon_stats_screen"
 TEMPLATE_GYM_MAIN_SCREEN = "template_gym_main_screen"
-TEMPLATE_CATCH_POKEMON_SCREEN = "template_catch_pokemon_screen"
+TEMPLATE_CATCH_POKEMON_SCREEN1 = "template_catch_pokemon_screen1"
+TEMPLATE_CATCH_POKEMON_SCREEN2 = "template_catch_pokemon_screen2"
+TEMPLATE_CATCH_POKEMON_SCREEN3 = "template_catch_pokemon_screen3"

@@ -78,23 +78,20 @@ class ClientAndroid:
         except socket.timeout, e:
             print 'Error! recv timed out, e:' + str(e)
         
-        print 'received msg header:'
-        pgutil.hexdump(tmp)    
+        #print 'received msg header:'
+        #pgutil.hexdump(tmp)    
         
         if tmp:
             data_len = struct.unpack_from("<I", tmp, 0)[0]
-            print 'received length: ' + str(data_len)
             msgId = struct.unpack_from("<I", tmp, 4)[0]
-            print 'received msgId: ' + str(msgId)
             t = struct.unpack_from("<I", tmp, 8)[0]
-            print 'received type: ' + str(t)
             
             buf_size = data_len - 8
             data = ''
             while len(data) < buf_size:
                 b = self.sock.recv(buf_size - len(data), socket.MSG_WAITALL)
                 data = data + b
-            print 'received bytes: ' + str(len(data))
+            #print 'received bytes: ' + str(len(data))
                 
             if (reqMsgId != msgId):
                 print 'ERROR! got wrong msgId in response %d/%d' % (reqMsgId, msgId)    
@@ -120,7 +117,7 @@ class ClientAndroid:
             if im is not None:
                 a = np.array(im.convert('L'))
                 
-                print "Get Screen OK!"
+                #print "Get Screen OK!"
                 
                 return a
     
@@ -139,7 +136,7 @@ class ClientAndroid:
         (t, data) = self.sendMessage(pgconst.MESSAGE_ANDROID_SEND_TOUCH, buf)
         
         if (t != None and t == pgconst.MESSAGE_ANDROID_SEND_TOUCH):
-            print "Send touch: " + str(data)
+            #print "Send touch: " + str(data)
             if sleep_after > 0:
                 sleep(sleep_after)
             return 1;
@@ -153,7 +150,7 @@ class ClientAndroid:
         (t, data) = self.sendMessage(pgconst.MESSAGE_ANDROID_SEND_SWIPE, buf)
         
         if (t != None and type == pgconst.MESSAGE_ANDROID_SEND_SWIPE):
-            print "Send swipe: " + str(data)
+            #print "Send swipe: " + str(data)
             return 1;
     
         return None
