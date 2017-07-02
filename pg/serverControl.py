@@ -6,6 +6,7 @@ initialization of the instance.
 serverAndroid is running instance of the phone controlling server
 """
 import socket
+import sys
 
 msgId = 0;
 
@@ -45,11 +46,17 @@ class ServerControl:
                 command = tokens[0]
                 
                 if command == 'CONTROL':
-                    self.handler.processMsg(tokens)
-                    msgId = msgId + 1;
-                    msg = "%s;%d;%d" % ('CONTROL', msgId, 1)
-                    sent = self.sock.sendto(msg, address)
-                    print 'ControlServer.run: sent %s bytes back to %s' % (sent, address)
+                    try:
+                        self.handler.processMsg(tokens)
+                        msgId = msgId + 1;
+                        msg = "%s;%d;%d" % ('CONTROL', msgId, 1)
+                    except:
+                        print "Error! some exception happened, while handlig congrol"
+                        print sys.exc_info()
+                    finally:
+                        sent = self.sock.sendto(msg, address)
+                        print 'ControlServer.run: sent %s bytes back to %s' % (sent, address)
+                        
                     
                 if command == 'TEST_ANDROID':
                     msgId = msgId + 1;

@@ -102,9 +102,16 @@ def do_relevant_action(clientAndroid, ps):
     
     #do actions based on the screen
     if result is None:
-        #we got unknown screen, save it
-        pgutil.save_array_as_png(img, "/tmp", "unknown_screen")
-        return 0 
+        #some mitigations for unknown screns
+        sleep(1)
+        img = clientAndroid.get_screen_as_array()
+        result = pgutil.identify_screen(img, ps)
+        
+        if result is None:
+            clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_EXIT_BUTTON))
+            #we got unknown screen, save it
+            pgutil.save_array_as_png(img, "/tmp", "unknown_screen")
+            return 0 
     
     res = 0
     
@@ -251,7 +258,9 @@ def click_donut(clientAndroid, ps, center, r0, r1, count):
             print "Retrying to identify screen"
             do_relevant_action(clientAndroid, ps)
             
-            
+    #click center of the donut as well            
+    clientAndroid.send_touch(ps.getCoord(center))
+    
     print "Finished clicking donut"
         
 def look_around(clientAndroid, ps):
@@ -265,7 +274,7 @@ def look_around(clientAndroid, ps):
     c = (phone_center[0], int(phone_center[1] * 2 * 0.7))
     
     #click around center performing actions per sector
-    click_donut(clientAndroid, ps, c, r0, r1, 8)
+    click_donut(clientAndroid, ps, c, r0, r1, 12)
     
     print "Look around is finished"
     

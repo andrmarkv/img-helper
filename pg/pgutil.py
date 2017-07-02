@@ -124,9 +124,7 @@ def read_templates(config, path):
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_CATCH_POKEMON_OK_BUTTON, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_CATCH_POKEMON_STATS_SCREEN, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_GYM_MAIN_SCREEN, templates)
-    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_CATCH_POKEMON_SCREEN1, templates)
-    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_CATCH_POKEMON_SCREEN2, templates)
-    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_CATCH_POKEMON_SCREEN3, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_CATCH_POKEMON_SCREEN, templates)
 
     return templates
 
@@ -188,13 +186,7 @@ def does_have_exit_button(img, ps):
     return r
 
 def is_catching_pokemon(img, ps):
-    r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_CATCH_POKEMON_SCREEN1), pgconst.MIN_RECOGNITION_VAL)
-    if r[0]: return r
-    
-    r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_CATCH_POKEMON_SCREEN2), pgconst.MIN_RECOGNITION_VAL)
-    if r[0]: return r
-    
-    r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_CATCH_POKEMON_SCREEN3), pgconst.MIN_RECOGNITION_VAL)
+    r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_CATCH_POKEMON_SCREEN), pgconst.MIN_RECOGNITION_VAL)
     if r[0]: return r
     
     return r
@@ -367,7 +359,7 @@ that has center at (100, 100), its radius is between 50 and 200 and sector start
 """ 
 def get_sector_dots(center, r0, r1, a0, a1):
     result = list()
-    c = 3 #this is into how many logical circles we will be splitting sector into
+    c = 4 #this is into how many logical circles we will be splitting sector into
     
     step = (r1 - r0) / c #length of the step
     da = a1 - a0 # total angle value 

@@ -1,0 +1,6 @@
+1. implement check if any pokemon was caught
+2. perform map rotation
+3. not circle but elipse
+4. detect when pokemon is shifter left or right
+5. implement collect mode only
+6. implement classification of pokemons
