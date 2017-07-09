@@ -10,6 +10,9 @@ class PhoneSettings:
         self.coords = coords
         self.scripts = scripts
         self.templates = templates
+        self.skipPokemons = False
+        self.clearBagCount = 10
+        self.sectorsCount = 8
     
     def getCoord(self, name):
         return self.coords[name]

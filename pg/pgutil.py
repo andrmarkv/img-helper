@@ -3,14 +3,12 @@ import cv2
 import os
 import sys
 import ast
-import subprocess
 from PIL import Image
 import time
 import math
 import struct
 
 from pg import pgconst
-from time import sleep
 
 """
 Vefify if image contains template.
@@ -114,7 +112,8 @@ def read_templates(config, path):
     
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POKEYDEX_BUTTON_MENU, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POKEYBALL_MAP_SCREEN, templates)
-    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POOKEY_STOP_EMPTY_SLOT, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POKEY_STOP_EMPTY_SLOT_NIGHT, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POKEY_STOP_EMPTY_SLOT_DAY, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_EXIT_BUTTON, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_REVIVE_DELETE, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POKE_BALL_DELETE, templates)
@@ -124,7 +123,10 @@ def read_templates(config, path):
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_CATCH_POKEMON_OK_BUTTON, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_CATCH_POKEMON_STATS_SCREEN, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_GYM_MAIN_SCREEN, templates)
-    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_CATCH_POKEMON_SCREEN, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_CATCH_POKEMON_SCREEN_DAY, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_CATCH_POKEMON_SCREEN_NIGHT, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_GYM_TOO_FAR, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_PASSENGER, templates)
 
     return templates
 
@@ -173,7 +175,9 @@ Returns:
     min_loc - top left corner of the identified minimum
 """
 def is_inside_pokestop(img, ps):
-    r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_POOKEY_STOP_EMPTY_SLOT), pgconst.MIN_RECOGNITION_VAL)
+    r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_POKEY_STOP_EMPTY_SLOT_DAY), pgconst.MIN_RECOGNITION_VAL)
+    if not r[0]:
+        r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_POKEY_STOP_EMPTY_SLOT_NIGHT), pgconst.MIN_RECOGNITION_VAL)
     return r
     
 
@@ -186,9 +190,13 @@ def does_have_exit_button(img, ps):
     return r
 
 def is_catching_pokemon(img, ps):
-    r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_CATCH_POKEMON_SCREEN), pgconst.MIN_RECOGNITION_VAL)
-    if r[0]: return r
-    
+    r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_CATCH_POKEMON_SCREEN_DAY), pgconst.MIN_RECOGNITION_VAL)
+    if not r[0]: 
+        r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_CATCH_POKEMON_SCREEN_NIGHT), pgconst.MIN_RECOGNITION_VAL)
+    return r
+
+def is_gym_too_far(img, ps):
+    r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_GYM_TOO_FAR), pgconst.MIN_RECOGNITION_VAL)
     return r
 
 def is_cougth_pokemon_popup(img, ps):
@@ -197,6 +205,10 @@ def is_cougth_pokemon_popup(img, ps):
 
 def is_pokemon_stats_popup(img, ps):
     r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_CATCH_POKEMON_STATS_SCREEN), pgconst.MIN_RECOGNITION_VAL)
+    return r
+
+def is_passenger_popup(img, ps):
+    r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_PASSENGER), pgconst.MIN_RECOGNITION_VAL)
     return r
 
 """
@@ -233,9 +245,17 @@ def identify_screen(img, ps):
     if r[0]:
         return (pgconst.SCREEN_CATCHING_POKEMON, r)
     
+    r = is_gym_too_far(img, ps)
+    if r[0]:
+        return (pgconst.SCREEN_GYM_TOO_FAR, r)
+    
     r = is_pokemon_stats_popup(img, ps)
     if r[0]:
         return (pgconst.SCREEN_POKEMON_STATS_POPUP, r)
+    
+    r = is_passenger_popup(img, ps)
+    if r[0]:
+        return (pgconst.SCREEN_PASSENGER, r)
     
     
     #That check has to be the last as it is generic verification
@@ -368,6 +388,14 @@ def get_sector_dots(center, r0, r1, a0, a1):
     for i in range(0, c):
         #calculate first dot that resides on bisector  
         d = r0 + step * i #distance from the center
+        
+        #adjust d for bottom and top sectors
+        if b > 150 and b < 210:
+            d = int(d * 0.6) # for the bottom is shorter 
+        
+        if (b > 0 and b < 30) or (b > 330 and b < 360):
+            d = int(d * 1.6) # for the top is longer
+        
         dx = int(d * math.sin(math.radians(b)))
         dy = int(d * math.cos(math.radians(b)))
         dot = (center[0] + dx, center[1] - dy)

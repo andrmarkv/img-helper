@@ -1,3 +1,5 @@
+skipPokemons = False #to indicate if we should try to catch them
+
 MIN_RECOGNITION_VAL = 0.01 #if we get below that value indicates that we found template
 
 DEL_ITEMS_POKEYBALL=1
@@ -15,6 +17,8 @@ SCREEN_HAS_EXIT_BUTTON = 5
 SCREEN_CATCHING_POKEMON = 6
 SCREEN_CAUGTH_POKEMON_POPUP = 7
 SCREEN_POKEMON_STATS_POPUP = 8
+SCREEN_GYM_TOO_FAR = 9
+SCREEN_PASSENGER = 10
 
 MESSAGE_ANDROID_TYPE_TEST = 1
 MESSAGE_ANDROID_SCREEN_CAP = 2
@@ -41,7 +45,8 @@ SCRIPT_SCROLL_ITEMS = "script_scrool_items"
 
 TEMPLATE_POKEYDEX_BUTTON_MENU = "template_pokeydex_button_menu"
 TEMPLATE_POKEYBALL_MAP_SCREEN = "template_pokeyball_map_screen"
-TEMPLATE_POOKEY_STOP_EMPTY_SLOT = "template_pookey_stop_empty_slot"
+TEMPLATE_POKEY_STOP_EMPTY_SLOT_DAY = "template_pokey_stop_empty_slot_day"
+TEMPLATE_POKEY_STOP_EMPTY_SLOT_NIGHT = "template_pokey_stop_empty_slot_night"
 TEMPLATE_EXIT_BUTTON = "template_exit_button"
 TEMPLATE_POKE_BALL_DELETE = "template_poke_ball_delete"
 TEMPLATE_RAZZ_BERRY_DELETE = "template_razz_berry_delete"
@@ -52,4 +57,7 @@ TEMPLATE_REVIVE_DELETE= "template_revive_delete"
 TEMPLATE_CATCH_POKEMON_OK_BUTTON = "template_catch_pokemon_OK_button"
 TEMPLATE_CATCH_POKEMON_STATS_SCREEN = "template_catch_pokemon_stats_screen"
 TEMPLATE_GYM_MAIN_SCREEN = "template_gym_main_screen"
-TEMPLATE_CATCH_POKEMON_SCREEN = "template_catch_pokemon_screen"
+TEMPLATE_CATCH_POKEMON_SCREEN_DAY = "template_catch_pokemon_screen_day"
+TEMPLATE_CATCH_POKEMON_SCREEN_NIGHT = "template_catch_pokemon_screen_night"
+TEMPLATE_GYM_TOO_FAR = "template_gym_too_far"
+TEMPLATE_PASSENGER = "template_passenger"

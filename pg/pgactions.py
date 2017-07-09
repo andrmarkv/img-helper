@@ -94,24 +94,32 @@ Returns:
     - 0 in case it was not able to identify screen and perform action
 """
 def do_relevant_action(clientAndroid, ps):
-    #get screen
-    img = clientAndroid.get_screen_as_array()
+#     print "start doing actions"
+    count = 0
+    result = None
     
-    #identify screen
-    result = pgutil.identify_screen(img, ps)
-    
-    #do actions based on the screen
-    if result is None:
-        #some mitigations for unknown screns
-        sleep(1)
+    #some mitigations for unknown screens
+    while (count < 3):
+        count = count + 1
+        
+        #get screen
         img = clientAndroid.get_screen_as_array()
+        
+        #identify screen
         result = pgutil.identify_screen(img, ps)
         
+        #do actions based on the screen
         if result is None:
-            clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_EXIT_BUTTON))
-            #we got unknown screen, save it
-            pgutil.save_array_as_png(img, "/tmp", "unknown_screen")
-            return 0 
+            sleep(1)
+        else:
+            break
+    
+    
+    if result is None:
+        clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_EXIT_BUTTON))
+        #we got unknown screen, save it
+        pgutil.save_array_as_png(img, "/tmp", "look_around_unknown_screen")
+        return 0
     
     res = 0
     
@@ -129,15 +137,24 @@ def do_relevant_action(clientAndroid, ps):
         res = 1
     elif result[0] == pgconst.SCREEN_MAIN_MAP:
         #do nothing as it is required screen
-        print "Main screen"
         res = 1
     elif result[0] == pgconst.SCREEN_POKEMON_STATS_POPUP:
         clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_EXIT_BUTTON))
         res = 1
+    elif result[0] == pgconst.SCREEN_GYM_TOO_FAR:
+        clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_EXIT_BUTTON))
+        res = 1
+    elif result[0] == pgconst.SCREEN_PASSENGER:
+        #Click PASSENGER button, result[1][2][1] should give y of the center of the match region
+        (x, y) = ps.getCoord(pgconst.COORDS_CENTER)
+        clientAndroid.send_touch((x, result[1][2][1]), 2)
+        res = 1
     
     if res == 0:
         print "was not able to perform proper action "
-        pgutil.save_array_as_png(img, "/tmp", "unknown_acions")
+        pgutil.save_array_as_png(img, "/tmp", "look_around_unknown_acions")
+    
+#     print "finished doing actions"
     
     return res
  
@@ -145,14 +162,19 @@ def do_relevant_action(clientAndroid, ps):
 def catch_pokemon(clientAndroid, ps):
     print "Processing catch pokemon"
     
+    if ps.skipPokemons:
+        clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_LEAVE_CATCH_POKEMON_BUTTON))
+        print "not catching, as specified in ini file"
+        return 1
+        
     i = 0
     while (i < 10):
         
         #Throw ball
         if i == 3 or i == 6:
             clientAndroid.send_swipe(ps.getScript(pgconst.SCRIPT_THROW_BALL_LONG))
-        elif i == 4 or i == 8:
-            clientAndroid.send_swipe(ps.getScript(pgconst.SCRIPT_THROW_BALL_SHORT))
+#         elif i == 4 or i == 8:
+#             clientAndroid.send_swipe(ps.getScript(pgconst.SCRIPT_THROW_BALL_SHORT))
         else:
             clientAndroid.send_swipe(ps.getScript(pgconst.SCRIPT_THROW_BALL_NORMAL))
         
@@ -163,7 +185,7 @@ def catch_pokemon(clientAndroid, ps):
         
         if result is not None:
             if result[0] == pgconst.SCREEN_CAUGTH_POKEMON_POPUP:
-                res = exit_from_catch_ok(clientAndroid, ps, result)
+                res = exit_from_catch_ok(clientAndroid, ps, result, i)
                 #1 indicates that we caught pokemon and exited popups
                 if (res == 1):
                     print "Caught pokemon on attempt: %d" % i  
@@ -194,7 +216,7 @@ def catch_pokemon(clientAndroid, ps):
 
         if result is not None:    
             if result[0] == pgconst.SCREEN_CAUGTH_POKEMON_POPUP:
-                res = exit_from_catch_ok(clientAndroid, ps, result)
+                res = exit_from_catch_ok(clientAndroid, ps, result, i)
                 #1 indicates that we caught pokemon and exited popups
                 if (res == 1):
                     print "Caught pokemon on attempt: %d" % i  
@@ -221,10 +243,13 @@ def catch_pokemon(clientAndroid, ps):
     pgutil.save_array_as_png(img, "/tmp", "missed_catch")
     clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_LEAVE_CATCH_POKEMON_BUTTON))
             
-def exit_from_catch_ok(clientAndroid, ps, result):
+def exit_from_catch_ok(clientAndroid, ps, result, attempt):
     #Click OK button for the given item, result[1][2][1] should give y of the center of the match region
     (x, y) = ps.getCoord(pgconst.COORDS_CENTER)
     clientAndroid.send_touch((x, result[1][2][1]), 2)
+    
+    img = clientAndroid.get_screen_as_array()
+    pgutil.save_array_as_png(img, "/tmp", "got_pkm_" + str(attempt))
     
     #exit from stats screen
     clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_EXIT_BUTTON))
@@ -259,7 +284,7 @@ def click_donut(clientAndroid, ps, center, r0, r1, count):
             do_relevant_action(clientAndroid, ps)
             
     #click center of the donut as well            
-    clientAndroid.send_touch(ps.getCoord(center))
+    clientAndroid.send_touch(center)
     
     print "Finished clicking donut"
         
@@ -274,7 +299,7 @@ def look_around(clientAndroid, ps):
     c = (phone_center[0], int(phone_center[1] * 2 * 0.7))
     
     #click around center performing actions per sector
-    click_donut(clientAndroid, ps, c, r0, r1, 12)
+    click_donut(clientAndroid, ps, c, r0, r1, ps.sectorsCount)
     
     print "Look around is finished"
     

@@ -1,6 +1,19 @@
-1. implement check if any pokemon was caught
-2. perform map rotation
+IMPLEMENTED:
 3. not circle but elipse
-4. detect when pokemon is shifter left or right
+7. add command that would allow capture screens - not needed adb screencap is good enough
 5. implement collect mode only
+10. perform clear bag
+11. storee images of captured pokemons with attempt count
+12. Implement exit from stuck in gyms (walk close...)
+
+
+NOT IMPLEMENTED:
+1. implement check if any pokemon was caught and if it is keep clicking - main idea is to make sure that we got all of them around stop
+2. perform map rotation - that is to handle situations where gym covers big portion of the screen
+4. detect when pokemon is shifted left or right
 6. implement classification of pokemons
+8. join gyms when possible
+9. perform periodic restarts
+13. Implement signal to another controller
+14. check if returning same screen again and again - means too close to gym
+

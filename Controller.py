@@ -25,6 +25,17 @@ def read_phone_settings(config):
     templates = pgutil.read_templates(config, path)
     
     ps = phoneSettings.PhoneSettings(coords, scripts, templates)
+    
+    skipPokemons = config.getboolean("main", "skipPokemons")
+    ps.skipPokemons = skipPokemons
+
+    clearBagCount = config.getint("main", "clearBagCount")
+    ps.clearBagCount = clearBagCount
+    
+    sectorsCount = config.getint("main", "sectorsCount")
+    ps.sectorsCount = sectorsCount
+    
+    
 
     return ps
 
