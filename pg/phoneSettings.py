@@ -13,6 +13,11 @@ class PhoneSettings:
         self.skipPokemons = False
         self.clearBagCount = 10
         self.sectorsCount = 8
+        self.isMaster = True
+        self.slave = None
+        
+        #this is context variable
+        self.dots_collection = dict()
     
     def getCoord(self, name):
         return self.coords[name]

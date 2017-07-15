@@ -294,6 +294,10 @@ def identify_catch_screen(clientAndroid, ps):
     if r[0]:
         return (pgconst.SCREEN_CATCHING_POKEMON, r)
     
+    r = is_menu(img, ps)
+    if r[0]:
+        return (pgconst.SCREEN_MAIN_MENU, r)
+    
     r = is_main_map(img, ps)
     if r[0]:
         return (pgconst.SCREEN_MAIN_MAP, r)
@@ -381,20 +385,26 @@ def get_sector_dots(center, r0, r1, a0, a1):
     result = list()
     c = 4 #this is into how many logical circles we will be splitting sector into
     
-    step = (r1 - r0) / c #length of the step
     da = a1 - a0 # total angle value 
     b = a0 + (da / 2) # this is bisector of the provided angle
+    density = 1
+    scale = 1
     
-    for i in range(0, c):
+    #adjust d for bottom and top sectors
+    if b > 150 and b < 210:
+        scale = scale * 0.8 # for the bottom is shorter
+        density = int(density / 2) 
+    
+    if (b > 0 and b < 30) or (b > 330 and b < 360):
+        scale = scale * 1.5 # for the top is longer
+        density = int(density * 2)
+        
+    loops_count = int(c * scale)
+    step = (r1 - r0) / loops_count #length of the step
+    
+    for i in range(0, loops_count):
         #calculate first dot that resides on bisector  
-        d = r0 + step * i #distance from the center
-        
-        #adjust d for bottom and top sectors
-        if b > 150 and b < 210:
-            d = int(d * 0.6) # for the bottom is shorter 
-        
-        if (b > 0 and b < 30) or (b > 330 and b < 360):
-            d = int(d * 1.6) # for the top is longer
+        d = (r0 + step * i) * scale #distance from the center
         
         dx = int(d * math.sin(math.radians(b)))
         dy = int(d * math.cos(math.radians(b)))
@@ -429,6 +439,20 @@ def get_sector_dots(center, r0, r1, a0, a1):
     #print "Got dots coordinates: " + result
                 
     return result
+
+"""
+Sort generated dots based on the distance from center. Parameters:
+    - center - center point of distribution
+    - dots all generated dots
+    - direction 1/2 - direction of the sorting (from/to center)
+Returns: list of sorted dots
+""" 
+def sort_dots(center, dots, direction=1):
+    #(math.pow((center[0] - tup[0]), 2) + math.pow((center[1] - tup[1]), 2))
+    if direction == 1:
+        dots.sort(key=lambda tup: (math.pow((center[0] - tup[0]), 2) + math.pow((center[1] - tup[1]), 2)), reverse=False)
+    else:
+        dots.sort(key=lambda tup: (math.pow((center[0] - tup[0]), 2) + math.pow((center[1] - tup[1]), 2)), reverse=True)
         
 def hexdump(src, length=16):
     result = []

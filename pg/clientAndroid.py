@@ -13,24 +13,29 @@ import StringIO
 from PIL import Image
 import numpy as np
 
-from pg import pgconst, pgutil
+from pg import pgconst
 
 class ClientAndroid:
     def __init__(self, ip, port):
-        self.server_address = (ip, port)
-
-        # Create a UDP socket
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        
-        print 'ServerAndroid: starting up on %s port %s' % self.server_address
-        
-        self.sock.connect(self.server_address)
-        
-        #Set timeout for blocking read
-        self.sock.settimeout(pgconst.ANDROID_CLIENT_RECV_TIMEOUT)
-        
-        self.msgId = 0;
+        try:
+            self.server_address = (ip, port)
+    
+            # Create a UDP socket
+            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            
+            print 'ClientAndroid: starting up on %s port %s' % self.server_address
+            
+            self.sock.connect(self.server_address)
+            
+            #Set timeout for blocking read
+            self.sock.settimeout(pgconst.ANDROID_CLIENT_RECV_TIMEOUT)
+            
+            self.msgId = 0;
+        except:
+            print 'ClientAndroid: Can not start, is remote host ready on %s port %s?' % self.server_address
+            raise
+            
         
     """
     Send message to the Android and wait for the response.
@@ -69,14 +74,25 @@ class ClientAndroid:
     """    
     def getResponse(self, reqMsgId):
         tmp = None
-        try:
-            #We need to receive 12 initial bytes 
-            tmp = ''
-            while len(tmp) < 12:
-                b = self.sock.recv(12 - len(tmp), socket.MSG_WAITALL)
-                tmp = tmp + b
-        except socket.timeout, e:
-            print 'Error! recv timed out, e:' + str(e)
+        
+        c = 0
+        c_max = 3
+        while c <= 3:
+            c = c + 1 
+            try:
+                #We need to receive 12 initial bytes 
+                tmp = ''
+                while len(tmp) < 12:
+                    b = self.sock.recv(12 - len(tmp), socket.MSG_WAITALL)
+                    tmp = tmp + b
+                #this means we successfully got msg length
+                break
+            except socket.timeout as e:
+                print 'Warning! Didn\'t get response within timeout, iteration: %d of %d' % (c, c_max)
+                print str(e)
+            except socket.error as e1:
+                print 'Error! Critical problem on the socket, exiting!'
+                raise e1
         
         #print 'received msg header:'
         #pgutil.hexdump(tmp)    
@@ -99,8 +115,8 @@ class ClientAndroid:
             return (t, data)
         
         else:
-            print 'Can not read reply'
-            return (None, None)
+            print 'Can not read reply, we should restart client'
+            raise 
         
     """
     execute screen capture and return it
