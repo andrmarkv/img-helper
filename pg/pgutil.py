@@ -362,6 +362,10 @@ Convenience function, store array as image for later analysis
 """ 
 def save_array_as_png(img, path, file_name):
     png = Image.fromarray(img)
+    
+    if(not os.path.isdir(path)):
+        os.makedirs(path)
+        
     tmp = file_name + "_" + str(int(time.time())) + '.png'
     f = os.path.join(path, tmp)
     png.save(f)
@@ -438,6 +442,28 @@ def get_sector_dots(center, r0, r1, a0, a1):
 
     #print "Got dots coordinates: " + result
                 
+    return result
+
+
+"""
+Generate coordinates for the touch events that have to happen
+within some logical sector. Parameters:
+    - center - (x, y) of the sector's center
+    - r - radius of the circle
+    - count - how many dots to generate
+Returns: list of the dots coordinates
+""" 
+def get_circle_dots(center, r, count):
+    result = list()
+    
+    b = int(360 / count)
+    
+    for i in range(0, b):
+        dx = int(r * math.sin(math.radians(i * b)))
+        dy = int(r * math.cos(math.radians(i * b)))
+        dot = (center[0] + dx, center[1] - dy)
+        result.append(dot) # new dot coordinates in the phones coordinate system
+
     return result
 
 """

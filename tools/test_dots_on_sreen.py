@@ -99,5 +99,6 @@ c = (center[0], int(center[1] * 2 * 0.7))
 #it is possible to use method from pgactions, or local
 #Read all template descriptions and populate dictionary
 ps = read_phone_settings(config, "../conf/redmi3_720_1280")
-pgactions.click_donut(clientAndroid, ps, c, r0, r1, ps.sectorsCount)
+#pgactions.click_donut(clientAndroid, ps, c, r0, r1, ps.sectorsCount)
+pgactions.click_circle(clientAndroid, ps, c, 35, 10)
 

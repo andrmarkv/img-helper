@@ -19,7 +19,7 @@ def clear_bag(clientAndroid, items, ps):
     
     if not pgutil.is_main_map(img, ps)[0]:
         print "clear_bag Error! wrong start screen."
-        pgutil.save_array_as_png(img, "/tmp/", "wrong_main_screen")
+        pgutil.save_array_as_png(img, ps.saveDir, "wrong_main_screen")
         return
     
     clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_MAIN_MENU_BUTTON))
@@ -85,6 +85,22 @@ def click_sector(clientAndroid, ps, center, r0, r1, a0, a1):
         clientAndroid.send_touch((dot[0], dot[1]), 0)
         
     print "Finished clicking sector"
+    
+def click_circle(clientAndroid, ps, center, r, count):
+    key = str(center) + str(r) + str(count)
+    
+    if ps.dots_collection.has_key(key):
+        dots = ps.dots_collection[key]
+    else:
+        #get dots within specified sector
+        dots = pgutil.get_circle_dots(center, r, count)
+        ps.dots_collection[key] = dots
+    
+    #click selected dots, do not sleep after each click
+    for dot in dots:
+        clientAndroid.send_touch((dot[0], dot[1]), 0)
+        
+    print "Finished clicking circle"
                         
 """
 Perform action based on what scren we are on
@@ -124,7 +140,7 @@ def do_relevant_action(clientAndroid, ps):
     if result is None:
         clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_EXIT_BUTTON))
         #we got unknown screen, save it
-        pgutil.save_array_as_png(img, "/tmp", "look_around_unknown_screen")
+        pgutil.save_array_as_png(img, ps.saveDir, "look_around_unknown_screen")
         return 0
     
     res = result[0]
@@ -151,7 +167,7 @@ def do_relevant_action(clientAndroid, ps):
     
     if res == 0:
         print "was not able to perform proper action "
-        pgutil.save_array_as_png(img, "/tmp", "look_around_unknown_acions")
+        pgutil.save_array_as_png(img, ps.saveDir, "look_around_unknown_acions")
     
 #     print "finished doing actions"
     
@@ -219,7 +235,7 @@ def catch_pokemon(clientAndroid, ps):
     print "Was not able to catch pokemon after, attempt: %d, exiting catching" % i
     img = clientAndroid.get_screen_as_array()
     #we got unknown screen, save it
-    pgutil.save_array_as_png(img, "/tmp", "missed_catch")
+    pgutil.save_array_as_png(img, ps.saveDir, "missed_catch")
     clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_LEAVE_CATCH_POKEMON_BUTTON))
             
 def exit_from_catch_ok(clientAndroid, ps, result, attempt):
@@ -228,7 +244,7 @@ def exit_from_catch_ok(clientAndroid, ps, result, attempt):
     clientAndroid.send_touch((x, result[1][2][1]), 2)
     
     img = clientAndroid.get_screen_as_array()
-    pgutil.save_array_as_png(img, "/tmp", "got_pkm_" + str(attempt))
+    pgutil.save_array_as_png(img, ps.saveDir, "got_pkm_" + str(attempt))
     
     #exit from stats screen
     clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_EXIT_BUTTON))
@@ -265,11 +281,11 @@ def click_donut(clientAndroid, ps, center, r0, r1, count):
         if res == pgconst.SCREEN_CATCHING_POKEMON:
             #repeat same sector
             print "Repeating sector as got pokemon"
-            i = i - 1
+            a0 = a0 - da
         elif res == pgconst.SCREEN_POKEMON_STATS_POPUP:
             print "Repeating sector as got pokemon stats"
             #repeat same sector
-            i = i - 1
+            a0 = a0 - da
             
     #click center of the donut as well            
     clientAndroid.send_touch(center)
@@ -289,6 +305,12 @@ def look_around(clientAndroid, ps):
     
     #click around center performing actions per sector
     click_donut(clientAndroid, ps, c, r0, r1, ps.sectorsCount)
+    
+    #click small circle around center
+    click_circle(clientAndroid, ps, c, 35, 10)
+    print "Waiting for 1 sec after clicks around center"
+    sleep(1)
+    do_relevant_action(clientAndroid, ps)
     
     print "Look around is finished"
     

@@ -32,6 +32,9 @@ def read_phone_settings(config):
     sectorsCount = config.getint("main", "sectorsCount")
     ps.sectorsCount = sectorsCount
     
+    saveDir = config.get("main", "saveDir")
+    ps.saveDir = saveDir
+    
     isMaster = config.getboolean("main", "isMaster")
     ps.isMaster = isMaster
     if (isMaster):

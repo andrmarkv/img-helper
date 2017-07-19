@@ -15,6 +15,7 @@ class PhoneSettings:
         self.sectorsCount = 8
         self.isMaster = True
         self.slave = None
+        self.saveDir = "/tmp/"
         
         #this is context variable
         self.dots_collection = dict()
