@@ -56,36 +56,6 @@ def read_phone_settings(config, path=None):
 
     return ps
 
-def click_donut(clientAndroid, ps, center, r0, r1, count):
-    da = 360/count #this is angle of each sector
-    a0 = 0
-    for i in range (0, count):
-        a1 = a0 + da
-        click_sector(clientAndroid, center, r0, r1, a0, a1)
-        a0 = a1
-        
-    #click center of the donut as well            
-    clientAndroid.send_touch(center)
-    
-    print "Finished clicking donut"
-    
-def click_sector(clientAndroid, center, r0, r1, a0, a1):
-    #get dots within specified sector
-    dots = pgutil.get_sector_dots(center, r0, r1, a0, a1)
-    
-    #sort
-    pgutil.sort_dots(center, dots, 1)
-    
-    #click selected dots, do not sleep after each click
-    for dot in dots:
-        clientAndroid.send_touch((dot[0], dot[1]), 0.1)
-        
-    print "Finished clicking sector"
-
-
-#some helper variables
-center = (360,640)
-
 if (len(sys.argv) < 2):
     print "Please specify INI file"
     sys.exit(1) 
@@ -104,14 +74,8 @@ serverAndroidPort = config.getint("clientAndroid", "port")
 #Create instance of the Android server to handle communication with the phone
 clientAndroid =  clientAndroid.ClientAndroid(serverAndroidIp, serverAndroidPort)
 
-r0 = 50
-r1 = int (center[0] * 0.8)
-c = (center[0], int(center[1] * 2 * 0.625))
-
 #it is possible to use method from pgactions, or local
 #Read all template descriptions and populate dictionary
 ps = read_phone_settings(config, "../conf/redmi3_720_1280")
-#pgactions.click_donut(clientAndroid, ps, c, r0, r1, ps.sectorsCount)
-#pgactions.click_circle(clientAndroid, ps, c, 35, 10)
-pgactions.click_zones(clientAndroid, ps, c)
+pgactions.do_relevant_action(clientAndroid, ps)
 

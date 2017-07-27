@@ -12,7 +12,10 @@ class PhoneSettings:
         self.templates = templates
         self.skipPokemons = False
         self.clearBagCount = 10
-        self.sectorsCount = 8
+        self.zonesCount = 1
+        self.dotsCount = 4
+        self.zonesWidth = 600
+        self.zoneHeight = 500
         self.isMaster = True
         self.slave = None
         self.saveDir = "/tmp/"

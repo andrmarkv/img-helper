@@ -43,7 +43,7 @@ def clear_bag(clientAndroid, items, ps):
                 clientAndroid.send_touch((x, r[1][2][1]))
                 
                 #Click select how many items 
-                for j in range (0, 1):
+                for j in range (0, 5):
                     clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_DISCARD_PLUS_BUTTON))
                 
                 #this is coordinates of yes button
@@ -86,6 +86,23 @@ def click_sector(clientAndroid, ps, center, r0, r1, a0, a1):
         
     print "Finished clicking sector"
     
+def click_zone(clientAndroid, ps, center, zone, direction=1):
+    key = str(zone[0]) + str(zone[1]) + str(direction)
+        
+    if ps.dots_collection.has_key(key):
+        dots = ps.dots_collection[key]
+    else:
+        #get dots within specified sector
+        dots = pgutil.get_rectangular_dots(zone[0], zone[1], ps.dotsCount)
+        pgutil.sort_dots(center, dots, direction)
+        ps.dots_collection[key] = dots
+    
+    #click selected dots, do not sleep after each click
+    for dot in dots:
+        clientAndroid.send_touch((dot[0], dot[1]), 0)
+        
+    print "Finished clicking zone: " + str(zone)
+    
 def click_circle(clientAndroid, ps, center, r, count):
     key = str(center) + str(r) + str(count)
     
@@ -101,6 +118,25 @@ def click_circle(clientAndroid, ps, center, r, count):
         clientAndroid.send_touch((dot[0], dot[1]), 0)
         
     print "Finished clicking circle"
+    
+def click_rectangle(clientAndroid, ps, (x0, y0), (x1, y1), count, direction=1):
+    key = str(x0) + str(y0) + str(x1) + str(y1) + str(direction) + str(count)
+    
+    if ps.dots_collection.has_key(key):
+        dots = ps.dots_collection[key]
+    else:
+        #get dots within specified sector
+        dots = pgutil.get_rectangular_dots((x0, y0), (x1, y1), count, direction)
+        pgutil.sort_dots((x0, y0), dots, direction)
+        ps.dots_collection[key] = dots
+    
+    
+    
+    #click selected dots, do not sleep after each click
+    for dot in dots:
+        clientAndroid.send_touch((dot[0], dot[1]), 0)
+        
+    print "Finished clicking rectangle"
                         
 """
 Perform action based on what scren we are on
@@ -156,10 +192,14 @@ def do_relevant_action(clientAndroid, ps):
     elif result[0] == pgconst.SCREEN_MAIN_MAP:
         #do nothing as it is required screen
         print "Main screen, do nothing"
+    elif result[0] == pgconst.SCREEN_SHOP:
+        clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_EXIT_BUTTON))
     elif result[0] == pgconst.SCREEN_POKEMON_STATS_POPUP:
         clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_EXIT_BUTTON))
     elif result[0] == pgconst.SCREEN_GYM_TOO_FAR:
         clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_EXIT_BUTTON))
+    elif result[0] == pgconst.SCREEN_HAS_GYM_JOIN:
+        join_gym(clientAndroid, ps, result)
     elif result[0] == pgconst.SCREEN_PASSENGER:
         #Click PASSENGER button, result[1][2][1] should give y of the center of the match region
         (x, y) = ps.getCoord(pgconst.COORDS_CENTER)
@@ -183,7 +223,7 @@ def catch_pokemon(clientAndroid, ps):
         return 1
         
     i = 0
-    while (i < 10):
+    while (i < 6):
         
         #Throw ball
         if i == 3 or i == 6:
@@ -231,12 +271,45 @@ def catch_pokemon(clientAndroid, ps):
                     clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_EXIT_BUTTON))
                     print "Strange state in the catching pokemon process, exiting catching, attemp: %d!" % i
                     return 1
+                elif result[0] == pgconst.SCREEN_SHOP:
+                    #that is just in case
+                    clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_EXIT_BUTTON))
+                    print "Strange state in the catching pokemon process (shop), exiting catching, attemp: %d!" % i
+                    return 1
             
     print "Was not able to catch pokemon after, attempt: %d, exiting catching" % i
     img = clientAndroid.get_screen_as_array()
     #we got unknown screen, save it
     pgutil.save_array_as_png(img, ps.saveDir, "missed_catch")
     clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_LEAVE_CATCH_POKEMON_BUTTON))
+    
+def join_gym(clientAndroid, ps, result):
+    print "Processing join gym"
+    
+    #Click join button, result[1][2] should contain coordinates of the join button
+    clientAndroid.send_touch(result[1][2], 1)
+    
+    j = 0
+    while (j < 10):
+        j = j + 1
+        print "Checking join gym screen j: %d..." % j
+        
+        result = pgutil.identify_join_gym_screen(clientAndroid, ps)
+        
+        if result is not None:
+            
+            if result[0] == pgconst.SCREEN_HAS_GYM_JOIN:
+                clientAndroid.send_touch(result[1][2])
+            elif result[0] == pgconst.SCREEN_POKEMONS_SELECTION:
+                clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_TOP_CP_POKEMON), 1)
+                print "Selected pokemon to join"
+            elif result[0] == pgconst.SCREEN_GYM_CONFIRM_BUTTON:
+                clientAndroid.send_touch(result[1][2], 5)
+                print "Got join confirm button"
+                clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_EXIT_BUTTON))
+                break
+            
+    print "Processing join gym, done"
             
 def exit_from_catch_ok(clientAndroid, ps, result, attempt):
     #Click OK button for the given item, result[1][2][1] should give y of the center of the match region
@@ -263,6 +336,7 @@ def click_donut(clientAndroid, ps, center, r0, r1, count):
     a0 = 0
     for i in range (0, count):
         a1 = a0 + da
+        print "Checking sector, r0: %d, r1: %d, a0: %d, a1: %d" % (r0, r1, a0, a1)
         click_sector(clientAndroid, ps, center, r0, r1, a0, a1)
         a0 = a1
         
@@ -292,6 +366,51 @@ def click_donut(clientAndroid, ps, center, r0, r1, count):
     do_relevant_action(clientAndroid, ps)
     
     print "Finished clicking donut"
+    
+def click_zones(clientAndroid, ps, center):
+    direction = 1
+    x0 = int(center[0] - (ps.zonesWidth / 2))
+    y0 = int(center[1] + (ps.zoneHeight / 2))
+    x1 = int(center[0] + (ps.zonesWidth / 2))
+    y1 = int(center[1] - (ps.zoneHeight / 2))
+    
+    #Generate zones to check
+    zones = pgutil.get_rectangular_zones((x0, y0), (x1, y1), ps.zonesCount * 2)
+
+    for zone in zones:
+        
+        isZoneDone = False
+        while not isZoneDone:
+            click_zone(clientAndroid, ps, center, zone, direction)
+            
+            #do something useful if possible
+            print "Waiting for 1 sec after clicks..."
+            res = do_relevant_action(clientAndroid, ps)
+            
+            #check if we were able to detect proper screen and if not retry after timeout
+            if res == 0:
+                print "Waiting for 3 sec after clicks..."
+                sleep(3)
+                print "Retrying to identify screen"
+                res = do_relevant_action(clientAndroid, ps)
+            
+            if not ps.skipPokemons:    
+                if res == pgconst.SCREEN_CATCHING_POKEMON:
+                    #repeat same sector
+                    print "Repeating zone as got pokemon"
+                    continue
+                elif res == pgconst.SCREEN_POKEMON_STATS_POPUP:
+                    print "Repeating zone as got pokemon stats"
+                    #repeat same sector
+                    continue
+            
+            isZoneDone = True
+            
+    #click center of the donut as well            
+    clientAndroid.send_touch(center)
+    do_relevant_action(clientAndroid, ps)
+    
+    print "Finished clicking zones"    
         
 def look_around(clientAndroid, ps):
     print "Performing look around"
@@ -301,16 +420,17 @@ def look_around(clientAndroid, ps):
     
     r0 = 50
     r1 = int (phone_center[0] * 0.8)
-    c = (phone_center[0], int(phone_center[1] * 2 * 0.7))
+    c = (phone_center[0], int(phone_center[1] * 2 * 0.625))
     
     #click around center performing actions per sector
-    click_donut(clientAndroid, ps, c, r0, r1, ps.sectorsCount)
+    #click_donut(clientAndroid, ps, c, r0, r1, ps.sectorsCount)
+    click_zones(clientAndroid, ps, c)
     
-    #click small circle around center
-    click_circle(clientAndroid, ps, c, 35, 10)
-    print "Waiting for 1 sec after clicks around center"
-    sleep(1)
-    do_relevant_action(clientAndroid, ps)
+#     #click small circle around center
+#     click_circle(clientAndroid, ps, c, 35, 10)
+#     print "Waiting for 1 sec after clicks around center"
+#     sleep(1)
+#     do_relevant_action(clientAndroid, ps)
     
     print "Look around is finished"
     

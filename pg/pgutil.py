@@ -64,6 +64,8 @@ def read_coords(config):
     __read_coord(config, "coords", pgconst.COORDS_DISCARD_YES_BUTTON, coords)
     __read_coord(config, "coords", pgconst.COORDS_CLOSE_ITEMS_MENU_BUTTON, coords)
     __read_coord(config, "coords", pgconst.COORDS_LEAVE_CATCH_POKEMON_BUTTON, coords)
+    __read_coord(config, "coords", pgconst.COORDS_TOP_CP_POKEMON, coords)
+    __read_coord(config, "coords", pgconst.COORDS_ANDROID_EXIT_BUTTON, coords)
     
     return coords
 
@@ -87,6 +89,7 @@ def read_scripts(config, path):
     __get_events_from_file(config, "swipes", path, pgconst.SCRIPT_THROW_BALL_LONG, scripts)
     __get_events_from_file(config, "swipes", path, pgconst.SCRIPT_THROW_BALL_SHORT, scripts)
     __get_events_from_file(config, "swipes", path, pgconst.SCRIPT_SCROLL_ITEMS, scripts)
+    __get_events_from_file(config, "swipes", path, pgconst.SCRIPT_ZOOM_OUT, scripts)
     
     return scripts
 
@@ -127,6 +130,13 @@ def read_templates(config, path):
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_CATCH_POKEMON_SCREEN_NIGHT, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_GYM_TOO_FAR, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_PASSENGER, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_EXIT_BUTTON_SHOP, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_GYM_JOIN_BUTTON, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POKEMONS_SELECTION, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_CONFIRM_GYM_YES_BUTTON, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_EXIT_YES_BUTTON, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_ANDROID_PHONE_ICON, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_ANDROID_PG_ICON, templates)
 
     return templates
 
@@ -200,7 +210,7 @@ def is_gym_too_far(img, ps):
     return r
 
 def is_cougth_pokemon_popup(img, ps):
-    r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_CATCH_POKEMON_OK_BUTTON), pgconst.MIN_RECOGNITION_VAL)
+    r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_CATCH_POKEMON_OK_BUTTON), pgconst.MIN_RECOGNITION_VAL * 0.1)
     return r
 
 def is_pokemon_stats_popup(img, ps):
@@ -209,6 +219,22 @@ def is_pokemon_stats_popup(img, ps):
 
 def is_passenger_popup(img, ps):
     r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_PASSENGER), pgconst.MIN_RECOGNITION_VAL)
+    return r
+
+def is_shop_screen(img, ps):
+    r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_EXIT_BUTTON_SHOP), pgconst.MIN_RECOGNITION_VAL)
+    return r
+
+def is_gym_join_button(img, ps):
+    r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_GYM_JOIN_BUTTON), pgconst.MIN_RECOGNITION_VAL)
+    return r
+
+def is_pokemos_selection_screen(img, ps):
+    r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_POKEMONS_SELECTION), pgconst.MIN_RECOGNITION_VAL * 0.01)
+    return r
+
+def is_gym_confirm_screen(img, ps):
+    r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_CONFIRM_GYM_YES_BUTTON), pgconst.MIN_RECOGNITION_VAL)
     return r
 
 """
@@ -236,6 +262,10 @@ def identify_screen(img, ps):
     r = is_menu(img, ps)
     if r[0]:
         return (pgconst.SCREEN_MAIN_MENU, r)
+
+    r = is_gym_join_button(img, ps)
+    if r[0]:
+        return (pgconst.SCREEN_HAS_GYM_JOIN, r)
     
     r = is_inside_gym(img, ps)
     if r[0]:
@@ -263,6 +293,11 @@ def identify_screen(img, ps):
     if r[0]:
         return (pgconst.SCREEN_HAS_EXIT_BUTTON, r)
     
+    #That check has to be the last as it is generic verification
+    r = is_shop_screen(img, ps)
+    if r[0]:
+        return (pgconst.SCREEN_SHOP, r)
+    
     return None
 
 
@@ -284,6 +319,7 @@ def identify_catch_screen(clientAndroid, ps):
     
     r = is_cougth_pokemon_popup(img, ps)
     if r[0]:
+        #save_array_as_png(img, ps.saveDir, "cougth_pokemon_popup_")
         return (pgconst.SCREEN_CAUGTH_POKEMON_POPUP, r)
     
     r = is_pokemon_stats_popup(img, ps)
@@ -307,6 +343,41 @@ def identify_catch_screen(clientAndroid, ps):
     r = does_have_exit_button(img, ps)
     if r[0]:
         return (pgconst.SCREEN_HAS_EXIT_BUTTON, r)
+    
+    #That check has to be the last as it is generic verification
+    r = is_shop_screen(img, ps)
+    if r[0]:
+        return (pgconst.SCREEN_SHOP, r)
+    
+    return None
+
+"""
+Handle process of joining to the gym. It has to be able to identify display screen in different situations.
+Ideally it should cover all possible situations.
+Parameters:
+    clientAndroid - client to handle Android requests
+    ps - phone specific settings
+Returns:
+    tuple (True/False, min_val, center, min_loc)
+    where - True - if match was found/False - all other cases
+    min_val - minimum value
+    center - center of the identified minimum
+    min_loc - top left corner of the identified minimum
+"""
+def identify_join_gym_screen(clientAndroid, ps):
+    img = clientAndroid.get_screen_as_array()
+    
+    r = is_gym_join_button(img, ps)
+    if r[0]:
+        return (pgconst.SCREEN_HAS_GYM_JOIN, r)
+    
+    r = is_pokemos_selection_screen(img, ps)
+    if r[0]:
+        return (pgconst.SCREEN_POKEMONS_SELECTION, r)
+    
+    r = is_gym_confirm_screen(img, ps)
+    if r[0]:
+        return (pgconst.SCREEN_GYM_CONFIRM_BUTTON, r)
     
     return None
 
@@ -465,6 +536,62 @@ def get_circle_dots(center, r, count):
         result.append(dot) # new dot coordinates in the phones coordinate system
 
     return result
+
+"""
+Generate coordinates for the touch events that have to happen
+within some logical rectangular. Parameters:
+    - (x0, y0) bottom left corner of the rectangular
+    - (x1, y1) top right corner of the rectangular
+    - count - how many dots to generate over each axis
+Returns: list of the dots coordinates
+""" 
+def get_rectangular_dots((x0, y0), (x1, y1), count):
+    result = list()
+    
+    padX = int(((x1 - x0) / count) / 2) #half of the step 
+    padY = int(((y0 - y1) / count) / 2) #half of the step
+    stepX = int((x1 - x0) / count)
+    stepY = int((y0 - y1) / count)
+ 
+    x = x0 + padX  
+    for i in range(0, count):
+        y = y1 + padY
+        for j in range(0, count):
+            dot = (x, y)
+            result.append(dot) # new dot coordinates in the phones coordinate system
+            y = y + stepY
+        x = x + stepX
+
+    return result
+
+
+"""
+Generate coordinates for the touch events that have to happen
+within some logical rectangular. Parameters:
+    - (x0, y0) bottom left corner of the rectangular
+    - (x1, y1) top right corner of the rectangular
+    - count - how many zones to generate over each axis
+Returns: list of the dots coordinates
+""" 
+def get_rectangular_zones((x0, y0), (x1, y1), count):
+    result = list()
+    
+    stepX = int((x1 - x0) / (count))
+    stepY = int((y0 - y1) / (count))
+    
+    x = x0
+    for i in range(0, count):
+        y = y1
+        for j in range(0, count):
+            zone = ((x, y + stepY), (x + stepX, y))
+            result.append(zone) # new zone coordinates
+            
+            y = y + stepY
+            
+        x = x + stepX
+
+    return result
+
 
 """
 Sort generated dots based on the distance from center. Parameters:

@@ -11,17 +11,18 @@ IMPLEMENTED:
 17. time based catching pokemon - pause is too long
 18. fix pokemon run away situation that goes to shopping screen
 21. fix error of message desyncronization ERROR! got wrong msgId in response 1849/1848 (happens after receive timeout)
-
+23. Add button from the shop screen as exit - right now it is not recognized
+1. implement check if any pokemon was caught and if it is keep clicking - main idea is to make sure that we got all of them around stop
+16. if got pokemon in the sector repeat secrot again, if gym or stop do not repeat
+22. Evenly distribute dots (create matrix, select and remember dots for the sectors)
 
 NOT IMPLEMENTED:
-1. implement check if any pokemon was caught and if it is keep clicking - main idea is to make sure that we got all of them around stop
 2. perform map rotation - that is to handle situations where gym covers big portion of the screen
 4. detect when pokemon is shifted left or right
 6. implement classification of pokemons
 8. join gyms when possible
 9. perform periodic restarts
 14. check if returning same screen again and again - means too close to gym
-16. if got pokemon in the sector repeat secrot again, if gym or stop do not repeat
 19. recognize letters to verify what pokemon we are catching and create exception lists
 20. try to identify gyms, active pokestops and pokemons on the main screen so be able to program touches
-22. Evenly distribute dots (create matrix, select and remember dots for the sectors)
+

@@ -171,4 +171,11 @@ class ClientAndroid:
     
         return None
     
+    def exit(self):
+        try:
+            self.sock.close()
+            print 'ClientAndroid: closed socket'
+        except:
+            print 'ClientAndroid: Can close socket'
+            raise    
     

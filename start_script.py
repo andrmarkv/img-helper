@@ -1,15 +1,15 @@
 #!/usr/bin/python
 
-from pg import serverControl
 from pg import clientAndroid as ca
 from pg import pgutil
-from pg import msgHandler
+from pg import pgconst
 from pg import phoneSettings
 
 import datetime
 import sys, traceback
 import os
 import ConfigParser
+from time import sleep
 
 """
 Read all phone specific settings from the INI 
@@ -23,29 +23,10 @@ def read_phone_settings(config):
     
     ps = phoneSettings.PhoneSettings(coords, scripts, templates)
     
-    skipPokemons = config.getboolean("main", "skipPokemons")
-    ps.skipPokemons = skipPokemons
-
-    clearBagCount = config.getint("main", "clearBagCount")
-    ps.clearBagCount = clearBagCount
-    
-    zonesCount = config.getint("main", "zonesCount")
-    ps.zonesCount = zonesCount
-    
-    dotsCount = config.getint("main", "dotsCount")
-    ps.dotsCount = dotsCount
-    
-    zonesWidth = config.getint("main", "zonesWidth")
-    ps.zonesWidth = zonesWidth
-    
-    zonesHeight = config.getint("main", "zonesHeight")
-    ps.zonesHeight = zonesHeight
-    
     saveDir = config.get("main", "saveDir")
     ps.saveDir = saveDir
     
     isMaster = config.getboolean("main", "isMaster")
-    ps.isMaster = isMaster
     if (isMaster):
         if config.has_section("slaveServer"):
             slaveIP = config.get("slaveServer", "ipAddr")
@@ -75,7 +56,6 @@ config.read(ini_file)
 isOK = True
 
 isOK = isOK and config.has_option("main", "path")
-isOK = isOK and config.has_section("controlServer")
 isOK = isOK and config.has_section("clientAndroid")
 isOK = isOK and config.has_section("swipes")
 isOK = isOK and config.has_section("coords")
@@ -87,9 +67,6 @@ if (not isOK):
 
 #Read all template descriptions and populate dictionary
 ps = read_phone_settings(config)
-
-serverIp = config.get("controlServer", "ipAddr")
-serverPort = config.getint("controlServer", "port")
 
 serverAndroidIp = config.get("clientAndroid", "ipAddr")
 serverAndroidPort = config.getint("clientAndroid", "port")
@@ -103,9 +80,42 @@ except:
     traceback.print_exc()
     sys.exit(1)
 
-#Create handler class that has to handle CONTROL messages
-handler = msgHandler.MsgHandler(clientAndroid, ps)
+i = 0
+while (i < 10):
+    i = i + 1 
+        
+    img = clientAndroid.get_screen_as_array()
+    r = pgutil.match_template(img, ps.getTemplate(pgconst.TEMPLATE_ANDROID_PG_ICON), pgconst.MIN_RECOGNITION_VAL)
+    if r[0]:
+        print "got Android screen, launching pg..."
+        clientAndroid.send_touch(r[2])
+        break
+    
+    
+#check if we got main screen
+i = 0
+while (i < 100):
+    i = i + 1
+    img = clientAndroid.get_screen_as_array()
+    r = pgutil.match_template(img, ps.getTemplate(pgconst.TEMPLATE_POKEYBALL_MAP_SCREEN), pgconst.MIN_RECOGNITION_VAL)
+    if r[0]:
+        print "got main map screen, restart was OK!"
+        clientAndroid.send_touch(r[2])
+        break
+    
+    r = pgutil.match_template(img, ps.getTemplate(pgconst.TEMPLATE_EXIT_YES_BUTTON), pgconst.MIN_RECOGNITION_VAL)
+    if r[0]:
+        print "got initial screen, restart was OK!"
+        clientAndroid.send_touch(r[2])
+        break
+    
+    print "waiting for the main screen, i = %d" % i
+    sleep(1)
 
-#Create instance of the server and pass handler to it
-server = serverControl.ServerControl(serverIp, serverPort, handler)
-server.run()
+clientAndroid.send_swipe(ps.getScript(pgconst.SCRIPT_ZOOM_OUT))
+    
+print "Restart was OK! Starting controller..."
+
+clientAndroid.exit()
+
+os.system("./Controller.py " + ini_file)

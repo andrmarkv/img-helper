@@ -19,6 +19,10 @@ SCREEN_CAUGTH_POKEMON_POPUP = 7
 SCREEN_POKEMON_STATS_POPUP = 8
 SCREEN_GYM_TOO_FAR = 9
 SCREEN_PASSENGER = 10
+SCREEN_SHOP = 11
+SCREEN_HAS_GYM_JOIN = 12
+SCREEN_POKEMONS_SELECTION = 13
+SCREEN_GYM_CONFIRM_BUTTON = 14
 
 MESSAGE_ANDROID_TYPE_TEST = 1
 MESSAGE_ANDROID_SCREEN_CAP = 2
@@ -36,12 +40,15 @@ COORDS_DISCARD_PLUS_BUTTON = "coord_discard_plus_button"
 COORDS_DISCARD_YES_BUTTON = "coord_discard_yes_button"
 COORDS_CLOSE_ITEMS_MENU_BUTTON = "coord_close_items_menu_button"
 COORDS_LEAVE_CATCH_POKEMON_BUTTON = "coord_leave_catch_pokemon_button"
+COORDS_TOP_CP_POKEMON = "coord_top_cp_pokemon"
+COORDS_ANDROID_EXIT_BUTTON = "coord_android_exit_button"
 
 SCRIPT_SWIPE_POKESTOP = "script_swipe_pokestop"
 SCRIPT_THROW_BALL_NORMAL = "script_throw_ball_normal"
 SCRIPT_THROW_BALL_LONG = "script_throw_ball_long"
 SCRIPT_THROW_BALL_SHORT = "script_throw_ball_short"
 SCRIPT_SCROLL_ITEMS = "script_scrool_items"
+SCRIPT_ZOOM_OUT = "script_zoom_out"
 
 TEMPLATE_POKEYDEX_BUTTON_MENU = "template_pokeydex_button_menu"
 TEMPLATE_POKEYBALL_MAP_SCREEN = "template_pokeyball_map_screen"
@@ -61,3 +68,11 @@ TEMPLATE_CATCH_POKEMON_SCREEN_DAY = "template_catch_pokemon_screen_day"
 TEMPLATE_CATCH_POKEMON_SCREEN_NIGHT = "template_catch_pokemon_screen_night"
 TEMPLATE_GYM_TOO_FAR = "template_gym_too_far"
 TEMPLATE_PASSENGER = "template_passenger"
+TEMPLATE_EXIT_BUTTON_SHOP = "template_exit_button_shop"
+TEMPLATE_GYM_JOIN_BUTTON = "template_gym_join_button"
+TEMPLATE_POKEMONS_SELECTION = "template_pokemons_selection"
+TEMPLATE_CONFIRM_GYM_YES_BUTTON = "template_confirm_gym_yes_button"
+TEMPLATE_EXIT_YES_BUTTON = "template_exit_yes_button"
+
+TEMPLATE_ANDROID_PHONE_ICON = "template_android_phone_icon"
+TEMPLATE_ANDROID_PG_ICON = "template_android_pg_icon"

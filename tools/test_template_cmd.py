@@ -27,7 +27,7 @@ def check_image(img, template):
 
 
 if (len(sys.argv) < 3):
-    print "pleae specify template_file and test_file"
+    print "please specify template_file and test_file"
     sys.exit(1) 
 
 
