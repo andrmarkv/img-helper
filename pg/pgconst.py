@@ -23,6 +23,7 @@ SCREEN_SHOP = 11
 SCREEN_HAS_GYM_JOIN = 12
 SCREEN_POKEMONS_SELECTION = 13
 SCREEN_GYM_CONFIRM_BUTTON = 14
+SCREEN_ANDROID_HOME = 15
 
 MESSAGE_ANDROID_TYPE_TEST = 1
 MESSAGE_ANDROID_SCREEN_CAP = 2
@@ -52,8 +53,12 @@ SCRIPT_ZOOM_OUT = "script_zoom_out"
 
 TEMPLATE_POKEYDEX_BUTTON_MENU = "template_pokeydex_button_menu"
 TEMPLATE_POKEYBALL_MAP_SCREEN = "template_pokeyball_map_screen"
-TEMPLATE_POKEY_STOP_EMPTY_SLOT_DAY = "template_pokey_stop_empty_slot_day"
-TEMPLATE_POKEY_STOP_EMPTY_SLOT_NIGHT = "template_pokey_stop_empty_slot_night"
+
+TEMPLATE_POKEY_STOP_DAY = "template_pokey_stop_day"
+TEMPLATE_POKEY_STOP_DAY_VISITED = "template_pokey_stop_day_visited"
+TEMPLATE_POKEY_STOP_NIGHT = "template_pokey_stop_night"
+TEMPLATE_POKEY_STOP_NIGHT_VISITED = "template_pokey_stop_night_visited"
+
 TEMPLATE_EXIT_BUTTON = "template_exit_button"
 TEMPLATE_POKE_BALL_DELETE = "template_poke_ball_delete"
 TEMPLATE_RAZZ_BERRY_DELETE = "template_razz_berry_delete"

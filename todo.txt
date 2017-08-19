@@ -25,4 +25,6 @@ NOT IMPLEMENTED:
 14. check if returning same screen again and again - means too close to gym
 19. recognize letters to verify what pokemon we are catching and create exception lists
 20. try to identify gyms, active pokestops and pokemons on the main screen so be able to program touches
+23. on restart possible that there is not start warning screen as game was on background
+24. it is possible to be stack in gym with two level exit button
 

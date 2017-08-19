@@ -13,39 +13,11 @@ from subprocess import check_output
 from subprocess import signal
 from time import sleep
 
-"""
-Read all phone specific settings from the INI 
-"""
-def read_phone_settings(config):
-    path = config.get("main", "path")
-  
-    coords = pgutil.read_coords(config)
-    scripts = pgutil.read_scripts(config, path)
-    templates = pgutil.read_templates(config, path)
-    
-    ps = phoneSettings.PhoneSettings(coords, scripts, templates)
-    
-    saveDir = config.get("main", "saveDir")
-    ps.saveDir = saveDir
-    
-    isMaster = config.getboolean("main", "isMaster")
-    if (isMaster):
-        if config.has_section("slaveServer"):
-            slaveIP = config.get("slaveServer", "ipAddr")
-            slavePort = config.getint("slaveServer", "port")
-            slave = (slaveIP, slavePort)
-            ps.slave = slave
-        else:
-            print "Warning: no slave server is specified"
-
-    return ps
-
-
-def get_pid(ini_file):
+def get_pid(ini_file, script_name):
     tmp = check_output("ps aux | grep " + ini_file, shell=True)
     lines = tmp.split('\n')
     for line in lines:
-        i = line.find("Controller.py")
+        i = line.find(script_name)
         j = line.find("python")
         if i >= 0 and j >= 0:
             print "Got process: " + line
@@ -82,17 +54,25 @@ if (not isOK):
     sys.exit(1)
 
 #Read all template descriptions and populate dictionary
-ps = read_phone_settings(config)
+ps = pgutil.read_phone_settings(config)
 
 serverAndroidIp = config.get("clientAndroid", "ipAddr")
 serverAndroidPort = config.getint("clientAndroid", "port")
 
-pid = get_pid(ini_file)
-if pid is not None and pid > 0:
-    print "stopping process with pid: %d" % pid
-    os.kill(pid, signal.SIGKILL)
-else:
-    print "No Controller process"
+for i in range(0, 3):
+    pid = get_pid(ini_file, "start_script.py")
+    if pid is not None and pid > 0:
+        print "stopping process with pid: %d" % pid
+        os.kill(pid, signal.SIGKILL)
+    else:
+        print "No start_script process"
+        
+    pid = get_pid(ini_file, "Controller.py")
+    if pid is not None and pid > 0:
+        print "stopping process with pid: %d" % pid
+        os.kill(pid, signal.SIGKILL)
+    else:
+        print "No Controller.py process"
 
 sleep(1)
 

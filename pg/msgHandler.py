@@ -45,7 +45,7 @@ class MsgHandler:
     def perform_clear_bag(self):
         print "MsgHandler.processMsg: Started clearing bag"
         #items = pgconst.DEL_ITEMS_NANAB_BERRY | pgconst.DEL_ITEMS_POTION | pgconst.DEL_ITEMS_RAZZ_BERRY | pgconst.DEL_ITEMS_REVIVE
-        items = pgconst.DEL_ITEMS_NANAB_BERRY | pgconst.DEL_ITEMS_POTION | pgconst.DEL_ITEMS_RAZZ_BERRY
+        items = pgconst.DEL_ITEMS_POTION
         pgactions.clear_bag(self.clientAndroid, items, self.ps)
     
 

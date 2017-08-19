@@ -76,6 +76,6 @@ clientAndroid =  clientAndroid.ClientAndroid(serverAndroidIp, serverAndroidPort)
 
 #it is possible to use method from pgactions, or local
 #Read all template descriptions and populate dictionary
-ps = read_phone_settings(config, "../conf/redmi3_720_1280")
+ps = pgutil.read_phone_settings(config)
 pgactions.do_relevant_action(clientAndroid, ps)
 

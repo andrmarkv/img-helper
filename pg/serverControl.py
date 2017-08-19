@@ -50,10 +50,18 @@ class ServerControl:
                     try:
                         self.handler.processMsg(tokens)
                         msgId = msgId + 1;
+                    except Exception:
+                        print "Error! some exception happened, while handling control message"
+                        print(traceback.format_exc())
+                    finally:
+                        msg = "%s;%d;%d" % ('CONTROL', msgId, 1)
+                        sent = self.sock.sendto(msg, address)
+                        print 'ControlServer.run: sent %s bytes back to %s' % (sent, address)
                         
-                        if msgId % 2 == 0:
-                            self.handler.clientAndroid
-                        
+                if command == 'WAITING':
+                    msg = ""
+                    try:
+                        msgId = msgId + 1;
                     except Exception:
                         print "Error! some exception happened, while handling control message"
                         print(traceback.format_exc())

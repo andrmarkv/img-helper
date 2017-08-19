@@ -9,6 +9,7 @@ import math
 import struct
 
 from pg import pgconst
+from pg import phoneSettings
 
 """
 Vefify if image contains template.
@@ -115,8 +116,10 @@ def read_templates(config, path):
     
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POKEYDEX_BUTTON_MENU, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POKEYBALL_MAP_SCREEN, templates)
-    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POKEY_STOP_EMPTY_SLOT_NIGHT, templates)
-    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POKEY_STOP_EMPTY_SLOT_DAY, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POKEY_STOP_DAY, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POKEY_STOP_DAY_VISITED, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POKEY_STOP_NIGHT, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POKEY_STOP_NIGHT_VISITED, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_EXIT_BUTTON, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_REVIVE_DELETE, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POKE_BALL_DELETE, templates)
@@ -139,6 +142,53 @@ def read_templates(config, path):
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_ANDROID_PG_ICON, templates)
 
     return templates
+
+"""
+Read all phone specific settings from the INI 
+"""
+def read_phone_settings(config):
+    path = config.get("main", "path")
+  
+    coords = read_coords(config)
+    scripts = read_scripts(config, path)
+    templates = read_templates(config, path)
+    
+    ps = phoneSettings.PhoneSettings(coords, scripts, templates)
+    
+    skipPokemons = config.getboolean("main", "skipPokemons")
+    ps.skipPokemons = skipPokemons
+
+    clearBagCount = config.getint("main", "clearBagCount")
+    ps.clearBagCount = clearBagCount
+    
+    zonesCount = config.getint("main", "zonesCount")
+    ps.zonesCount = zonesCount
+    
+    dotsCount = config.getint("main", "dotsCount")
+    ps.dotsCount = dotsCount
+    
+    zonesWidth = config.getint("main", "zonesWidth")
+    ps.zonesWidth = zonesWidth
+    
+    zonesHeight = config.getint("main", "zonesHeight")
+    ps.zonesHeight = zonesHeight
+    
+    saveDir = config.get("main", "saveDir")
+    ps.saveDir = saveDir
+    
+    isMaster = config.getboolean("main", "isMaster")
+    ps.isMaster = isMaster
+    if (isMaster):
+        if config.has_section("slaveServer"):
+            slaveIP = config.get("slaveServer", "ipAddr")
+            slavePort = config.getint("slaveServer", "port")
+            slave = (slaveIP, slavePort)
+            ps.slave = slave
+        else:
+            print "Warning: no slave server is specified"
+
+    return ps
+
 
 """
 Convenience function, it has to verify if current image is a main map of the game
@@ -185,9 +235,13 @@ Returns:
     min_loc - top left corner of the identified minimum
 """
 def is_inside_pokestop(img, ps):
-    r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_POKEY_STOP_EMPTY_SLOT_DAY), pgconst.MIN_RECOGNITION_VAL)
+    r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_POKEY_STOP_DAY), pgconst.MIN_RECOGNITION_VAL)
     if not r[0]:
-        r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_POKEY_STOP_EMPTY_SLOT_NIGHT), pgconst.MIN_RECOGNITION_VAL)
+        r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_POKEY_STOP_NIGHT), pgconst.MIN_RECOGNITION_VAL)
+    if not r[0]:
+        r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_POKEY_STOP_DAY_VISITED), pgconst.MIN_RECOGNITION_VAL)
+    if not r[0]:
+        r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_POKEY_STOP_NIGHT_VISITED), pgconst.MIN_RECOGNITION_VAL)
     return r
     
 
@@ -235,6 +289,10 @@ def is_pokemos_selection_screen(img, ps):
 
 def is_gym_confirm_screen(img, ps):
     r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_CONFIRM_GYM_YES_BUTTON), pgconst.MIN_RECOGNITION_VAL)
+    return r
+
+def is_android_home_screen(img, ps):
+    r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_ANDROID_PHONE_ICON), pgconst.MIN_RECOGNITION_VAL)
     return r
 
 """
@@ -297,6 +355,11 @@ def identify_screen(img, ps):
     r = is_shop_screen(img, ps)
     if r[0]:
         return (pgconst.SCREEN_SHOP, r)
+    
+    #Verify if application was stopped and we got to the android home screen
+    r = is_android_home_screen(img, ps)
+    if r[0]:
+        return (pgconst.SCREEN_ANDROID_HOME, r)
     
     return None
 

@@ -123,16 +123,18 @@ class ClientAndroid:
     as numpy array of bytes (grey two dimentional, suitable for cv2 operations)
     Array is equal to cv2.imread('file.png', 0)
     """
-    def get_screen_as_array(self):
+    def get_screen_as_array(self, color=False):
         (t, data) = self.sendMessage(pgconst.MESSAGE_ANDROID_SCREEN_CAP, None)
         
         if (t != None and t == pgconst.MESSAGE_ANDROID_SCREEN_CAP):
             io = StringIO.StringIO(data)
             im = Image.open(io)
-    
+
             if im is not None:
-                a = np.array(im.convert('L'))
-                
+                if not color:
+                    a = np.array(im.convert('L'))
+                else:
+                    a = np.array(im.convert())
                 #print "Get Screen OK!"
                 
                 return a

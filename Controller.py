@@ -4,59 +4,11 @@ from pg import serverControl
 from pg import clientAndroid as ca
 from pg import pgutil
 from pg import msgHandler
-from pg import phoneSettings
 
 import datetime
 import sys, traceback
 import os
 import ConfigParser
-
-"""
-Read all phone specific settings from the INI 
-"""
-def read_phone_settings(config):
-    path = config.get("main", "path")
-  
-    coords = pgutil.read_coords(config)
-    scripts = pgutil.read_scripts(config, path)
-    templates = pgutil.read_templates(config, path)
-    
-    ps = phoneSettings.PhoneSettings(coords, scripts, templates)
-    
-    skipPokemons = config.getboolean("main", "skipPokemons")
-    ps.skipPokemons = skipPokemons
-
-    clearBagCount = config.getint("main", "clearBagCount")
-    ps.clearBagCount = clearBagCount
-    
-    zonesCount = config.getint("main", "zonesCount")
-    ps.zonesCount = zonesCount
-    
-    dotsCount = config.getint("main", "dotsCount")
-    ps.dotsCount = dotsCount
-    
-    zonesWidth = config.getint("main", "zonesWidth")
-    ps.zonesWidth = zonesWidth
-    
-    zonesHeight = config.getint("main", "zonesHeight")
-    ps.zonesHeight = zonesHeight
-    
-    saveDir = config.get("main", "saveDir")
-    ps.saveDir = saveDir
-    
-    isMaster = config.getboolean("main", "isMaster")
-    ps.isMaster = isMaster
-    if (isMaster):
-        if config.has_section("slaveServer"):
-            slaveIP = config.get("slaveServer", "ipAddr")
-            slavePort = config.getint("slaveServer", "port")
-            slave = (slaveIP, slavePort)
-            ps.slave = slave
-        else:
-            print "Warning: no slave server is specified"
-
-    return ps
-
 
 t0 = datetime.datetime.now()
 
@@ -86,7 +38,7 @@ if (not isOK):
     sys.exit(1)
 
 #Read all template descriptions and populate dictionary
-ps = read_phone_settings(config)
+ps = pgutil.read_phone_settings(config)
 
 serverIp = config.get("controlServer", "ipAddr")
 serverPort = config.getint("controlServer", "port")

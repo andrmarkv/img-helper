@@ -1,3 +1,5 @@
+import sys
+
 from pg import pgconst, pgutil
 from time import sleep
 
@@ -204,6 +206,9 @@ def do_relevant_action(clientAndroid, ps):
         #Click PASSENGER button, result[1][2][1] should give y of the center of the match region
         (x, y) = ps.getCoord(pgconst.COORDS_CENTER)
         clientAndroid.send_touch((x, result[1][2][1]), 2)
+    elif result[0] == pgconst.SCREEN_ANDROID_HOME:
+        #We have to exit from the application and start from the beginning
+        sys.exit(1)
     
     if res == 0:
         print "was not able to perform proper action "
@@ -306,8 +311,13 @@ def join_gym(clientAndroid, ps, result):
             elif result[0] == pgconst.SCREEN_GYM_CONFIRM_BUTTON:
                 clientAndroid.send_touch(result[1][2], 5)
                 print "Got join confirm button"
+                sleep(2)
+            elif result[0] == pgconst.SCREEN_HAS_EXIT_BUTTON:
+                print "Got exit button after gym joining"
                 clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_EXIT_BUTTON))
-                break
+            elif result[0] == pgconst.SCREEN_MAIN_MAP:
+                print "Processing join gym, done! Got Main map"
+                return;
             
     print "Processing join gym, done"
             
@@ -415,6 +425,9 @@ def click_zones(clientAndroid, ps, center):
 def look_around(clientAndroid, ps):
     print "Performing look around"
     
+    #get image for training to mark objects before
+    img = clientAndroid.get_screen_as_array(True)
+    pgutil.save_array_as_png(img, "/opt/for_training/before", "main")
     #some helper variables
     phone_center = ps.getCoord(pgconst.COORDS_CENTER)
     
@@ -431,6 +444,10 @@ def look_around(clientAndroid, ps):
 #     print "Waiting for 1 sec after clicks around center"
 #     sleep(1)
 #     do_relevant_action(clientAndroid, ps)
+    
+    #get image for training to mark objects after
+    img = clientAndroid.get_screen_as_array(True)
+    pgutil.save_array_as_png(img, "/opt/for_training/after", "main")
     
     print "Look around is finished"
     
