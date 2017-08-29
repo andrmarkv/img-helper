@@ -188,7 +188,10 @@ def do_relevant_action(clientAndroid, ps):
     elif result[0] == pgconst.SCREEN_INSIDE_GYM:
         clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_EXIT_BUTTON))
     elif result[0] == pgconst.SCREEN_CATCHING_POKEMON:
-        catch_pokemon(clientAndroid, ps)
+        r = catch_pokemon(clientAndroid, ps)
+        if r == 0:
+            #that means that we failed catch because it escapes - do not try that zone anymore to avoid wasting balls
+            return pgconst.SCREEN_MAIN_MAP
     elif result[0] == pgconst.SCREEN_HAS_EXIT_BUTTON:
         clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_EXIT_BUTTON))
     elif result[0] == pgconst.SCREEN_MAIN_MAP:
@@ -254,7 +257,7 @@ def catch_pokemon(clientAndroid, ps):
                     #1 indicates that we caught pokemon and exited popups
                     if (res == 1):
                         print "Caught pokemon on attempt: %d" % i  
-                        return 1
+                        return 2
                 elif result[0] == pgconst.SCREEN_POKEMON_STATS_POPUP:
                     clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_EXIT_BUTTON))
                     print "Got to pokemon stats on attempt: %d" % i
@@ -288,6 +291,8 @@ def catch_pokemon(clientAndroid, ps):
     pgutil.save_array_as_png(img, ps.saveDir, "missed_catch")
     clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_LEAVE_CATCH_POKEMON_BUTTON))
     
+    return 0
+    
 def join_gym(clientAndroid, ps, result):
     print "Processing join gym"
     
@@ -305,6 +310,7 @@ def join_gym(clientAndroid, ps, result):
             
             if result[0] == pgconst.SCREEN_HAS_GYM_JOIN:
                 clientAndroid.send_touch(result[1][2])
+                print "Got join button"
             elif result[0] == pgconst.SCREEN_POKEMONS_SELECTION:
                 clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_TOP_CP_POKEMON), 1)
                 print "Selected pokemon to join"
@@ -314,10 +320,13 @@ def join_gym(clientAndroid, ps, result):
                 sleep(2)
             elif result[0] == pgconst.SCREEN_HAS_EXIT_BUTTON:
                 print "Got exit button after gym joining"
-                clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_EXIT_BUTTON))
+                clientAndroid.send_touch(result[1][2], 5)
             elif result[0] == pgconst.SCREEN_MAIN_MAP:
                 print "Processing join gym, done! Got Main map"
                 return;
+        else:
+            img = clientAndroid.get_screen_as_array(True)
+            pgutil.save_array_as_png(img, ps.saveDir, "join_gym_strange")
             
     print "Processing join gym, done"
             

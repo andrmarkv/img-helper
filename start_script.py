@@ -87,7 +87,7 @@ while True:
         r = pgutil.match_template(img, ps.getTemplate(pgconst.TEMPLATE_POKEYBALL_MAP_SCREEN), pgconst.MIN_RECOGNITION_VAL)
         if r[0]:
             print "got main map screen, restart was OK!"
-            clientAndroid.send_touch(r[2])
+            #clientAndroid.send_touch(r[2])
             status = 2;
             break
         

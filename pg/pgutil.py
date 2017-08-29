@@ -134,12 +134,14 @@ def read_templates(config, path):
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_GYM_TOO_FAR, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_PASSENGER, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_EXIT_BUTTON_SHOP, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_EXIT_BUTTON_DARK, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_GYM_JOIN_BUTTON, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POKEMONS_SELECTION, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_CONFIRM_GYM_YES_BUTTON, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_EXIT_YES_BUTTON, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_ANDROID_PHONE_ICON, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_ANDROID_PG_ICON, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_BATTLE_BUTTON, templates)
 
     return templates
 
@@ -235,22 +237,42 @@ Returns:
     min_loc - top left corner of the identified minimum
 """
 def is_inside_pokestop(img, ps):
+    (x, y) = ps.getCoord(pgconst.COORDS_CENTER)
     r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_POKEY_STOP_DAY), pgconst.MIN_RECOGNITION_VAL)
+    if r[0]:
+        #Check if x coordinate of the matched region close to the center
+        if not ((r[2][0] >= (x - 10)) and (r[2][0] <= (x + 10)) and (r[2][1] <= (y * 2) / 3)):
+            r = (False, r[1], r[2], r[3]);
+            return r
     if not r[0]:
         r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_POKEY_STOP_NIGHT), pgconst.MIN_RECOGNITION_VAL)
-    if not r[0]:
-        r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_POKEY_STOP_DAY_VISITED), pgconst.MIN_RECOGNITION_VAL)
-    if not r[0]:
-        r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_POKEY_STOP_NIGHT_VISITED), pgconst.MIN_RECOGNITION_VAL)
+        if r[0]:
+            #Check if x coordinate of the matched region close to the center
+            if not ((r[2][0] >= (x - 10)) and (r[2][0] <= (x + 10)) and (r[2][1] <= (y * 2) / 3)):
+                r = (False, r[1], r[2], r[3]);
+                return r
+    
+    if r[0]:
+        #Check if it is not gym as sometimes possible to get false positive (for example with snorlax)
+        r1 = match_template(img, ps.getTemplate(pgconst.TEMPLATE_GYM_MAIN_SCREEN), pgconst.MIN_RECOGNITION_VAL)
+        
+        if r1[0]:
+            #That means that we are inside gym and not pokestop
+            save_array_as_png(img, ps.saveDir, "wrong_pokestop")
+            return False
     return r
     
 
 def is_inside_gym(img, ps):
     r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_GYM_MAIN_SCREEN), pgconst.MIN_RECOGNITION_VAL)
+    if not r[0]:
+        r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_BATTLE_BUTTON), pgconst.MIN_RECOGNITION_VAL) 
     return r
 
 def does_have_exit_button(img, ps):
     r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_EXIT_BUTTON), pgconst.MIN_RECOGNITION_VAL)
+    if not r[0]:
+        r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_EXIT_BUTTON_DARK), pgconst.MIN_RECOGNITION_VAL)
     return r
 
 def is_catching_pokemon(img, ps):
@@ -312,14 +334,6 @@ def identify_screen(img, ps):
     r = is_main_map(img, ps)
     if r[0]:
         return (pgconst.SCREEN_MAIN_MAP, r)
-    
-    r = is_inside_pokestop(img, ps)
-    if r[0]:
-        return (pgconst.SCREEN_INSIDE_POKESTOP, r)
-    
-    r = is_menu(img, ps)
-    if r[0]:
-        return (pgconst.SCREEN_MAIN_MENU, r)
 
     r = is_gym_join_button(img, ps)
     if r[0]:
@@ -329,13 +343,21 @@ def identify_screen(img, ps):
     if r[0]:
         return (pgconst.SCREEN_INSIDE_GYM, r)
     
-    r = is_catching_pokemon(img, ps)
-    if r[0]:
-        return (pgconst.SCREEN_CATCHING_POKEMON, r)
-    
     r = is_gym_too_far(img, ps)
     if r[0]:
         return (pgconst.SCREEN_GYM_TOO_FAR, r)
+    
+    r = is_inside_pokestop(img, ps)
+    if r[0]:
+        return (pgconst.SCREEN_INSIDE_POKESTOP, r)
+    
+    r = is_menu(img, ps)
+    if r[0]:
+        return (pgconst.SCREEN_MAIN_MENU, r)
+
+    r = is_catching_pokemon(img, ps)
+    if r[0]:
+        return (pgconst.SCREEN_CATCHING_POKEMON, r)
     
     r = is_pokemon_stats_popup(img, ps)
     if r[0]:
@@ -441,6 +463,10 @@ def identify_join_gym_screen(clientAndroid, ps):
     r = is_gym_confirm_screen(img, ps)
     if r[0]:
         return (pgconst.SCREEN_GYM_CONFIRM_BUTTON, r)
+    
+    r = does_have_exit_button(img, ps)
+    if r[0]:
+        return (pgconst.SCREEN_HAS_EXIT_BUTTON, r)
     
     return None
 
