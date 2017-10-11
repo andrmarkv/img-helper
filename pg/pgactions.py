@@ -167,6 +167,7 @@ def do_relevant_action(clientAndroid, ps):
         
         #identify screen
         result = pgutil.identify_screen(img, ps)
+        pgutil.print_identified_screen(result)
         
         #do actions based on the screen
         if result is None:
@@ -231,7 +232,7 @@ def catch_pokemon(clientAndroid, ps):
         return 1
         
     i = 0
-    while (i < 6):
+    while (i < 9):
         
         #Throw ball
         if i == 3 or i == 6:

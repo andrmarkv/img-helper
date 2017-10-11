@@ -387,6 +387,52 @@ def identify_screen(img, ps):
 
 
 """
+helper method to show which screen was detected
+"""
+def print_identified_screen(result):
+    if result is None:
+        print "screen is: NONE"
+        return
+    
+    screen_id, r = result
+
+    if screen_id == pgconst.SCREEN_MAIN_MAP: 
+        print "screen is: SCREEN_MAIN_MAP"
+    elif screen_id == pgconst.SCREEN_MAIN_MENU: 
+        print "screen is: SCREEN_MAIN_MENU"
+    elif screen_id == pgconst.SCREEN_INSIDE_POKESTOP: 
+        print "screen is: SCREEN_INSIDE_POKESTOP";
+    elif screen_id == pgconst.SCREEN_INSIDE_GYM: 
+        print "screen is: SCREEN_INSIDE_GYM";
+    elif screen_id == pgconst.SCREEN_HAS_EXIT_BUTTON: 
+        print "screen is: SCREEN_HAS_EXIT_BUTTON";
+    elif screen_id == pgconst.SCREEN_CATCHING_POKEMON: 
+        print "screen is: SCREEN_CATCHING_POKEMON";
+    elif screen_id == pgconst.SCREEN_CAUGTH_POKEMON_POPUP: 
+        print "screen is: SCREEN_CAUGTH_POKEMON_POPUP";
+    elif screen_id == pgconst.SCREEN_POKEMON_STATS_POPUP: 
+        print "screen is: SCREEN_POKEMON_STATS_POPUP";
+    elif screen_id == pgconst.SCREEN_GYM_TOO_FAR: 
+        print "screen is: SCREEN_GYM_TOO_FAR";
+    elif screen_id == pgconst.SCREEN_PASSENGER: 
+        print "screen is: SCREEN_PASSENGER";
+    elif screen_id == pgconst.SCREEN_SHOP: 
+        print "screen is: SCREEN_SHOP";
+    elif screen_id == pgconst.SCREEN_HAS_GYM_JOIN: 
+        print "screen is: SCREEN_HAS_GYM_JOIN";
+    elif screen_id == pgconst.SCREEN_POKEMONS_SELECTION: 
+        print "screen is: SCREEN_POKEMONS_SELECTION";
+    elif screen_id == pgconst.SCREEN_GYM_CONFIRM_BUTTON: 
+        print "screen is: SCREEN_GYM_CONFIRM_BUTTON";
+    elif screen_id == pgconst.SCREEN_ANDROID_HOME: 
+        print "screen is: SCREEN_ANDROID_HOME";
+    else: 
+        print "screen is: UNKNOWN";
+        
+    return
+
+
+"""
 Handle catching pokemon situations function. It has to be able to identify display screen in different situations.
 Ideally it should cover all possible situations.
 Parameters:
