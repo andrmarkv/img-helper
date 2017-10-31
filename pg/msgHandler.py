@@ -36,8 +36,9 @@ class MsgHandler:
              
         print "MsgHandler.processMsg: Started pokestop handling"
         
-        if self.msgCount % self.ps.clearBagCount == 0:
-            self.perform_clear_bag()
+        #Remove clear bag as it causes sometimes hangs on the gym
+        #if self.msgCount % self.ps.clearBagCount == 0:
+        #    self.perform_clear_bag()
         
         pgactions.look_around(self.clientAndroid, self.ps)
         print "MsgHandler.processMsg: Finished pokestop handling"
