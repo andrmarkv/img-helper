@@ -120,6 +120,7 @@ def read_templates(config, path):
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POKEY_STOP_DAY_VISITED, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POKEY_STOP_NIGHT, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POKEY_STOP_NIGHT_VISITED, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POKEY_STOP_LURE, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_EXIT_BUTTON, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_REVIVE_DELETE, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POKE_BALL_DELETE, templates)
@@ -250,6 +251,10 @@ def is_inside_pokestop(img, ps):
             #Check if x coordinate of the matched region close to the center
             if not ((r[2][0] >= (x - 10)) and (r[2][0] <= (x + 10)) and (r[2][1] <= (y * 2) / 3)):
                 r = (False, r[1], r[2], r[3]);
+                return r
+    if not r[0]:
+        r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_POKEY_STOP_LURE), pgconst.MIN_RECOGNITION_VAL)
+        if r[0]:
                 return r
     
     if r[0]:
