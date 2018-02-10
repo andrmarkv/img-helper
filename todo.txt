@@ -17,6 +17,8 @@ IMPLEMENTED:
 22. Evenly distribute dots (create matrix, select and remember dots for the sectors)
 
 NOT IMPLEMENTED:
+!!! After exit from the failed caching pokemon click other zone - right now clicks same pokemon again waisting balls
+
 2. perform map rotation - that is to handle situations where gym covers big portion of the screen
 4. detect when pokemon is shifted left or right
 6. implement classification of pokemons
