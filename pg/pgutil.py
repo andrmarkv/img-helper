@@ -1,4 +1,5 @@
 import cv2
+import numpy as np
 
 import os
 import sys
@@ -116,11 +117,7 @@ def read_templates(config, path):
     
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POKEYDEX_BUTTON_MENU, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POKEYBALL_MAP_SCREEN, templates)
-    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POKEY_STOP_DAY, templates)
-    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POKEY_STOP_DAY_VISITED, templates)
-    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POKEY_STOP_NIGHT, templates)
-    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POKEY_STOP_NIGHT_VISITED, templates)
-    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POKEY_STOP_LURE, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POKEY_STOP, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_EXIT_BUTTON, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_REVIVE_DELETE, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_POKE_BALL_DELETE, templates)
@@ -233,38 +230,12 @@ Parameters:
 Returns:
     tuple (True/False, min_val, center, min_loc)
     where - True - if match was found/False - all other cases
-    min_val - minimum value
-    center - center of the identified minimum
-    min_loc - top left corner of the identified minimum
+    min_val - 0 (not used in that method)
+    center - 0 (not used in that method)
+    min_loc - 0 (not used in that method)
 """
 def is_inside_pokestop(img, ps):
-    (x, y) = ps.getCoord(pgconst.COORDS_CENTER)
-    r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_POKEY_STOP_DAY), pgconst.MIN_RECOGNITION_VAL)
-    if r[0]:
-        #Check if x coordinate of the matched region close to the center
-        if not ((r[2][0] >= (x - 10)) and (r[2][0] <= (x + 10)) and (r[2][1] <= (y * 2) / 3)):
-            r = (False, r[1], r[2], r[3]);
-            return r
-    if not r[0]:
-        r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_POKEY_STOP_NIGHT), pgconst.MIN_RECOGNITION_VAL)
-        if r[0]:
-            #Check if x coordinate of the matched region close to the center
-            if not ((r[2][0] >= (x - 10)) and (r[2][0] <= (x + 10)) and (r[2][1] <= (y * 2) / 3)):
-                r = (False, r[1], r[2], r[3]);
-                return r
-    if not r[0]:
-        r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_POKEY_STOP_LURE), pgconst.MIN_RECOGNITION_VAL)
-        if r[0]:
-                return r
-    
-    if r[0]:
-        #Check if it is not gym as sometimes possible to get false positive (for example with snorlax)
-        r1 = match_template(img, ps.getTemplate(pgconst.TEMPLATE_GYM_MAIN_SCREEN), pgconst.MIN_RECOGNITION_VAL)
-        
-        if r1[0]:
-            #That means that we are inside gym and not pokestop
-            save_array_as_png(img, ps.saveDir, "wrong_pokestop")
-            return False
+    r = is_same_color_by_mask(img, ps.getTemplate(pgconst.TEMPLATE_POKEY_STOP))
     return r
     
 
@@ -788,5 +759,47 @@ def get_events_from_file(file_name):
     print('lcount: %d, bufLen: %d') % (lcount, len(buf))
     
     return buf        
-        
+
+"""
+Verify if all pixels specified by maskImg have save color
+    - img - image to test
+    - imgMask - image in the form of B/W mask - only non Black pixes will be checked for color
+Returns: 
+    - True if all pixels specified by non Black mask have same color
+    - True if pixels for a smooth gradient, delta in color is less then 2
+"""         
+def is_same_color_by_mask(img, imgMask):
+    # set all pixels marked by black color of the mask to zero 
+    c = np.bitwise_and(img, imgMask)
     
+    # extract all non zero pixels from the original image
+    e = np.extract(c, img)
+    
+    # calculate average of the non zero pixels
+    av = np.average(e)
+    
+    # image considered to have same color if average of non zero elements is equual to the first pixel
+    if e[0] == int(av):
+        return (True, 0, 0, 0);
+    
+    # next let's check if colors in the image form a smooth gradient
+    # get unique numbers
+    u = np.unique(e, return_counts=True)
+    
+    # if there are more then 10 color variations return false
+    if np.size(u[0]) > 10:
+        return (False, np.size(u[0]), np.min(u[0]), np.max(u[0]));
+    
+    # check if numbers differ for more then 2
+    c0 = u[0][0]
+    isGradient = True
+    for color in u[0]:
+        if color - c0 > 2:
+            isGradient = False
+            break
+        c0 = color
+        
+    if isGradient:
+        return (True, np.size(u[0]), np.min(u[0]), np.max(u[0]));
+        
+    return (False, np.size(u[0]), np.min(u[0]), np.max(u[0]));

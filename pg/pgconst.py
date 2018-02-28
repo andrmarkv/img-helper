@@ -54,11 +54,7 @@ SCRIPT_ZOOM_OUT = "script_zoom_out"
 TEMPLATE_POKEYDEX_BUTTON_MENU = "template_pokeydex_button_menu"
 TEMPLATE_POKEYBALL_MAP_SCREEN = "template_pokeyball_map_screen"
 
-TEMPLATE_POKEY_STOP_DAY = "template_pokey_stop_day"
-TEMPLATE_POKEY_STOP_DAY_VISITED = "template_pokey_stop_day_visited"
-TEMPLATE_POKEY_STOP_NIGHT = "template_pokey_stop_night"
-TEMPLATE_POKEY_STOP_NIGHT_VISITED = "template_pokey_stop_night_visited"
-TEMPLATE_POKEY_STOP_LURE = "template_pokey_stop_lure"
+TEMPLATE_POKEY_STOP = "template_pokey_stop"
 
 TEMPLATE_EXIT_BUTTON = "template_exit_button"
 TEMPLATE_POKE_BALL_DELETE = "template_poke_ball_delete"

@@ -232,10 +232,10 @@ def catch_pokemon(clientAndroid, ps):
         return 1
         
     i = 0
-    while (i < 9):
+    while (i < 4):
         
         #Throw ball
-        if i == 3 or i == 6:
+        if i == 2 or i == 4:
             clientAndroid.send_swipe(ps.getScript(pgconst.SCRIPT_THROW_BALL_LONG))
 #         elif i == 4 or i == 8:
 #             clientAndroid.send_swipe(ps.getScript(pgconst.SCRIPT_THROW_BALL_SHORT))
