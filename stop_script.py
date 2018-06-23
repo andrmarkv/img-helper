@@ -4,6 +4,7 @@ from pg import clientAndroid as ca
 from pg import pgutil
 from pg import pgconst
 from pg import phoneSettings
+from pg import pgactions
 
 import datetime
 import sys, traceback
@@ -86,16 +87,9 @@ except:
     sys.exit(1)
 
 i = 0
-while (i < 10):
-    i = i + 1 
-    clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_ANDROID_EXIT_BUTTON), 1)
-    #check if we are on a main screen
-    img = clientAndroid.get_screen_as_array()
-    r = pgutil.match_template(img, ps.getTemplate(pgconst.TEMPLATE_EXIT_YES_BUTTON), pgconst.MIN_RECOGNITION_VAL)
-    if r[0]:
-        print "Got exit confirmation screen"
-        clientAndroid.send_touch(r[2], 1)
-        
+while (i < 3):
+    i = i + 1
+    pgactions.force_exit_app(clientAndroid, ps) 
     img = clientAndroid.get_screen_as_array()
     r = pgutil.match_template(img, ps.getTemplate(pgconst.TEMPLATE_ANDROID_PHONE_ICON), pgconst.MIN_RECOGNITION_VAL)
     if r[0]:

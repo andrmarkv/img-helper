@@ -63,7 +63,7 @@ class ServerControl:
                     try:
                         msgId = msgId + 1;
                     except Exception:
-                        print "Error! some exception happened, while handling control message"
+                        print "Error! some exception happened, while handling waiting message"
                         print(traceback.format_exc())
                     finally:
                         msg = "%s;%d;%d" % ('CONTROL', msgId, 1)

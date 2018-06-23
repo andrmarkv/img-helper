@@ -13,7 +13,7 @@ from pg import pgconst
 from pg import phoneSettings
 
 """
-Vefify if image contains template.
+Verify if image contains template.
 Image and template are numpy two dimensional arrays
 min_reconition_val is indicator of template to be found in the image. Reasonable value is 0.01
 retuns tuple of (True/False, min_val, center, min_loc), where
@@ -68,6 +68,9 @@ def read_coords(config):
     __read_coord(config, "coords", pgconst.COORDS_LEAVE_CATCH_POKEMON_BUTTON, coords)
     __read_coord(config, "coords", pgconst.COORDS_TOP_CP_POKEMON, coords)
     __read_coord(config, "coords", pgconst.COORDS_ANDROID_EXIT_BUTTON, coords)
+    __read_coord(config, "coords", pgconst.COORDS_ANDROID_HOME_BUTTON, coords)
+    __read_coord(config, "coords", pgconst.COORDS_ANDROID_BACK_BUTTON, coords)
+    __read_coord(config, "coords", pgconst.COORDS_ANDROID_CLOSE_ALL_BUTTON, coords)
     
     return coords
 
@@ -129,6 +132,7 @@ def read_templates(config, path):
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_GYM_MAIN_SCREEN, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_CATCH_POKEMON_SCREEN_DAY, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_CATCH_POKEMON_SCREEN_NIGHT, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_CATCH_POKEMON_SCREEN_DAY_SNOW, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_GYM_TOO_FAR, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_PASSENGER, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_EXIT_BUTTON_SHOP, templates)
@@ -140,6 +144,8 @@ def read_templates(config, path):
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_ANDROID_PHONE_ICON, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_ANDROID_PG_ICON, templates)
     __get_templ_img(config, "templates", path, pgconst.TEMPLATE_BATTLE_BUTTON, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_NO_POKEBALLS, templates)
+    __get_templ_img(config, "templates", path, pgconst.TEMPLATE_BUY_EXTRA_POKEBALLS, templates)
 
     return templates
 
@@ -255,6 +261,8 @@ def is_catching_pokemon(img, ps):
     r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_CATCH_POKEMON_SCREEN_DAY), pgconst.MIN_RECOGNITION_VAL)
     if not r[0]: 
         r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_CATCH_POKEMON_SCREEN_NIGHT), pgconst.MIN_RECOGNITION_VAL)
+    if not r[0]: 
+        r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_CATCH_POKEMON_SCREEN_DAY_SNOW), pgconst.MIN_RECOGNITION_VAL)
     return r
 
 def is_gym_too_far(img, ps):
@@ -274,7 +282,11 @@ def is_passenger_popup(img, ps):
     return r
 
 def is_shop_screen(img, ps):
-    r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_EXIT_BUTTON_SHOP), pgconst.MIN_RECOGNITION_VAL)
+    r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_BUY_EXTRA_POKEBALLS), pgconst.MIN_RECOGNITION_VAL)
+    return r
+
+def is_no_pokeballs_screen(img, ps):
+    r = match_template(img, ps.getTemplate(pgconst.TEMPLATE_NO_POKEBALLS), pgconst.MIN_RECOGNITION_VAL)
     return r
 
 def is_gym_join_button(img, ps):
@@ -343,16 +355,23 @@ def identify_screen(img, ps):
     if r[0]:
         return (pgconst.SCREEN_PASSENGER, r)
     
+    #Check if we are out of pokeballs
+    r = is_no_pokeballs_screen(img, ps)
+    if r[0]:
+        return (pgconst.SCREEN_NO_POKEBALLS, r)
+    
+    #Check if we got to shop screen
+    r = is_shop_screen(img, ps)
+    if r[0]:
+        return (pgconst.SCREEN_SHOP, r)
+    
     
     #That check has to be the last as it is generic verification
     r = does_have_exit_button(img, ps)
     if r[0]:
         return (pgconst.SCREEN_HAS_EXIT_BUTTON, r)
     
-    #That check has to be the last as it is generic verification
-    r = is_shop_screen(img, ps)
-    if r[0]:
-        return (pgconst.SCREEN_SHOP, r)
+
     
     #Verify if application was stopped and we got to the android home screen
     r = is_android_home_screen(img, ps)
@@ -445,6 +464,9 @@ def identify_catch_screen(clientAndroid, ps):
     if r[0]:
         return (pgconst.SCREEN_MAIN_MAP, r)
     
+    r = is_no_pokeballs_screen(img, ps)
+    if r[0]:
+        return (pgconst.SCREEN_NO_POKEBALLS, r)
     
     #That check has to be the last as it is generic verification
     r = does_have_exit_button(img, ps)
@@ -769,11 +791,21 @@ Returns:
     - True if pixels for a smooth gradient, delta in color is less then 2
 """         
 def is_same_color_by_mask(img, imgMask):
+    if len(img.shape) != 2:
+        print "WARNING! wrong image shape: " + str(img.shape)
+        return
+    
     # set all pixels marked by black color of the mask to zero 
     c = np.bitwise_and(img, imgMask)
+    if len(c.shape) != 2:
+        print "WARNING! wrong image mask shape: " + str(c.shape)
+        return
     
     # extract all non zero pixels from the original image
     e = np.extract(c, img)
+    if e is not None and len(e.shape) != 1:
+        print "WARNING! wrong non zero pixels matrix: " + str(e.shape)
+        return    
     
     # calculate average of the non zero pixels
     av = np.average(e)
@@ -803,3 +835,20 @@ def is_same_color_by_mask(img, imgMask):
         return (True, np.size(u[0]), np.min(u[0]), np.max(u[0]));
         
     return (False, np.size(u[0]), np.min(u[0]), np.max(u[0]));
+
+
+"""
+Crop image 
+    - img - image to test
+    - skipTop - how many pixels skip on the top
+    - skipBottom - how many pixels skip on the bottom
+    - skipLeft - how many pixels skip on the left
+    - skipRight - how many pixels skip on the right
+Returns: 
+    - cropped image
+"""
+def crop(img, skipTop, skipBottom, skipLeft=0, skipRight=0):
+    (h, w) = np.shape(img)
+    a = img[skipTop:h - skipBottom, skipLeft:w - skipRight]
+    return a
+

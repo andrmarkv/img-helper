@@ -4,12 +4,15 @@ from pg import clientAndroid as ca
 from pg import pgutil
 from pg import pgconst
 from pg import phoneSettings
+from pg import pgactions
 
 import datetime
 import sys, traceback
 import os
 import ConfigParser
+import numpy as np
 from time import sleep
+from setuptools.command.build_ext import if_dl
 
 t0 = datetime.datetime.now()
 
@@ -81,6 +84,8 @@ while True:
     
     #check if we got main screen
     i = 0
+    img0 = None
+    sameCount = 0
     while (i < 100):
         i = i + 1
         img = clientAndroid.get_screen_as_array()
@@ -98,7 +103,23 @@ while True:
             status = 3;
             break
         
-        print "waiting for the main screen, i = %d" % i
+        print "waiting for the main screen, i = %d, sameCount = %d" % (i, sameCount)
+        if (i > 1 and img0 is not None):
+            # do check only if size of the images is the same (flipped screen case)
+            if(np.shape(img)[0] == np.shape(img0)[0]):
+                a = pgutil.crop(img, 70, 200)
+                a0 = pgutil.crop(img0, 70, 200)
+                r = pgutil.match_template(a, a0, pgconst.MIN_RECOGNITION_VAL * 0.001)
+                if(r[0]):
+                    sameCount = sameCount + 1
+        img0 = img
+        
+        # Restart if we stuck on the loading screen
+        if(sameCount > 60):
+            # Exit waiting loop as we need to restart app
+            status = 4
+            break
+        
         sleep(1)
 
     if status < 1:
@@ -108,6 +129,11 @@ while True:
     else:
         #reset status
         status = 0
+        
+    # Perform restart buttons
+    if status == 4:
+        pgactions.force_exit_app(clientAndroid, ps)
+        continue
         
     sleep(3)
     print "Zooming out main screen"

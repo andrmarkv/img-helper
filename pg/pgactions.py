@@ -45,7 +45,7 @@ def clear_bag(clientAndroid, items, ps):
                 clientAndroid.send_touch((x, r[1][2][1]))
                 
                 #Click select how many items 
-                for j in range (0, 5):
+                for j in range (0, 25):
                     clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_DISCARD_PLUS_BUTTON))
                 
                 #this is coordinates of yes button
@@ -188,7 +188,7 @@ def do_relevant_action(clientAndroid, ps):
         collect_pokestop(clientAndroid, ps)
     elif result[0] == pgconst.SCREEN_INSIDE_GYM:
         clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_EXIT_BUTTON))
-    elif result[0] == pgconst.SCREEN_CATCHING_POKEMON:
+    elif result[0] == pgconst.SCREEN_CATCHING_POKEMON or result[0] == pgconst.SCREEN_NO_POKEBALLS:
         r = catch_pokemon(clientAndroid, ps)
         if r == 0:
             #that means that we failed catch because it escapes - do not try that zone anymore to avoid wasting balls
@@ -200,6 +200,8 @@ def do_relevant_action(clientAndroid, ps):
         print "Main screen, do nothing"
     elif result[0] == pgconst.SCREEN_SHOP:
         clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_EXIT_BUTTON))
+        #If we got shop screen then we stop catching until program restart
+        ps.skipPokemons = True
     elif result[0] == pgconst.SCREEN_POKEMON_STATS_POPUP:
         clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_EXIT_BUTTON))
     elif result[0] == pgconst.SCREEN_GYM_TOO_FAR:
@@ -275,15 +277,23 @@ def catch_pokemon(clientAndroid, ps):
                     #pokemon run away
                     print "Pokemon run away after attemps %d!" % i
                     return 1
-                elif result[0] == pgconst.SCREEN_HAS_EXIT_BUTTON:
-                    #that is just in case
-                    clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_EXIT_BUTTON))
-                    print "Strange state in the catching pokemon process, exiting catching, attemp: %d!" % i
+                elif result[0] == pgconst.SCREEN_NO_POKEBALLS:
+                    print "Out of pokeballs, exiting catching, attemp: %d!" % i
+                    #If we got no pokeballs screen then we stop catching until program restart
+                    ps.skipPokemons = True
+                    clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_LEAVE_CATCH_POKEMON_BUTTON))
                     return 1
                 elif result[0] == pgconst.SCREEN_SHOP:
                     #that is just in case
                     clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_EXIT_BUTTON))
-                    print "Strange state in the catching pokemon process (shop), exiting catching, attemp: %d!" % i
+                    print "Got to the shopping screen, exiting catching, attemp: %d!" % i
+                    #If we got shop screen then we stop catching until program restart
+                    ps.skipPokemons = True
+                    return 1
+                elif result[0] == pgconst.SCREEN_HAS_EXIT_BUTTON:
+                    #that is just in case
+                    clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_EXIT_BUTTON))
+                    print "Strange state in the catching pokemon process, exiting catching, attemp: %d!" % i
                     return 1
             
     print "Was not able to catch pokemon after, attempt: %d, exiting catching" % i
@@ -484,6 +494,11 @@ def hexdump(src, length=16):
     
     return tmp
         
-        
-        
-    
+def force_exit_app(clientAndroid, ps):
+    print "Forcing exit to the main screen and app close"
+    clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_ANDROID_HOME_BUTTON))
+    sleep(1)
+    clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_ANDROID_BACK_BUTTON))
+    sleep(1)
+    clientAndroid.send_touch(ps.getCoord(pgconst.COORDS_ANDROID_CLOSE_ALL_BUTTON))
+    sleep(1)
